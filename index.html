@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backflow Reports</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+            background-color: #1e1e1e;
+            color: #ffffff;
+        }
+        #headerContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px 0;
+            background-color: #333333;
+        }
+        #logoLeft, #logoRight {
+            width: 50px;
+            height: 50px;
+            margin: 0 20px;
+        }
+        #title {
+            text-align: center;
+            font-size: 36px;
+            font-weight: bold;
+            color: #ffffff;
+            margin: 0;
+        }
+        #dateContainer {
+            text-align: center;
+            padding: 10px 0;
+            background-color: #333333;
+        }
+        #dateInput {
+            padding: 8px;
+            font-size: 24px;
+            background-color: #2a2a2a;
+            color: #ffffff;
+            border: 1px solid #666666;
+            border-radius: 4px;
+            width: 200px;
+        }
+        #spreadsheet {
+            height: 700px;
+            width: 100%;
+            background-color: #2a2a2a;
+            overflow: auto;
+        }
+        #buttonContainer {
+            text-align: center;
+            padding: 20px;
+            background-color: #2a2a2a;
+            border-top: 2px solid #444444;
+        }
+        button {
+            padding: 20px 40px;
+            font-size: 24px;
+            color: #ffffff;
+            border: 1px solid #666666;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 0 10px;
+        }
+        #exportButton {
+            background-color: #444444;
+        }
+        #exportButton:hover {
+            background-color: #555555;
+        }
+        #deleteButton {
+            background-color: #662222;
+        }
+        #deleteButton:hover {
+            background-color: #883333;
+        }
+        #confirmationPopup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #333333;
+            padding: 20px;
+            border: 2px solid #666666;
+            border-radius: 8px;
+            z-index: 1000;
+        }
+        #confirmationPopup button {
+            padding: 10px 20px;
+            font-size: 18px;
+            margin: 10px;
+        }
+        #confirmationPopup #confirmYes {
+            background-color: #662222;
+        }
+        #confirmationPopup #confirmYes:hover {
+            background-color: #883333;
+        }
+        #confirmationPopup #confirmNo {
+            background-color: #444444;
+        }
+        #confirmationPopup #confirmNo:hover {
+            background-color: #555555;
+        }
+        .handsontable {
+            color: #ffffff;
+            background-color: #2a2a2a;
+        }
+        .handsontable th {
+            background-color: #333333;
+            color: #ffffff;
+        }
+        .handsontable td {
+            background-color: #2a2a2a;
+            color: #ffffff;
+            border-color: #444444;
+        }
+        .handsontable .ht__highlight {
+            background-color: #3a3a3a;
+        }
+    </style>
+</head>
+<body>
+    <div id="headerContainer">
+        <img id="logoLeft" src="/logo-left.png" alt="Left Logo">
+        <div id="title">Backflow Reports</div>
+        <img id="logoRight" src="/logo-right.png" alt="Right Logo">
+    </div>
+    <div id="dateContainer">
+        <input type="date" id="dateInput" value="">
+    </div>
+    <div id="spreadsheet"></div>
+    <div id="buttonContainer">
+        <button id="exportButton">Save/Send</button>
+        <button id="deleteButton">Delete Data</button>
+    </div>
+    <div id="confirmationPopup">
+        <p>Are you sure you want to delete all data?</p>
+        <button id="confirmYes">Yes</button>
+        <button id="confirmNo">No</button>
+    </div>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('spreadsheet');
+            const dateInput = document.getElementById('dateInput');
+
+            // Initialize Handsontable
+            const hot = new Handsontable(container, {
+                data: Array(20).fill().map(() => Array(5).fill('')),
+                rowHeaders: true,
+                colHeaders: ['PSI', 'CV #1', 'CV #2', 'RV Opening', 'Notes'],
+                colWidths: [100, 100, 100, 100, 200],
+                rowHeights: 40,
+                minRows: 20,
+                maxRows: 20,
+                minCols: 5,
+                contextMenu: true,
+                licenseKey: 'non-commercial-and-evaluation',
+                stretchH: 'all',
+                cells: function(row, col, prop) {
+                    return {
+                        readOnly: false,
+                        type: col < 4 ? 'numeric' : 'text'
+                    };
+                },
+                afterScrollVertically: function() {
+                    this.render();
+                }
+            });
+
+            // Load data from localStorage
+            function loadFromLocalStorage() {
+                const savedData = localStorage.getItem('backflowReports');
+                if (savedData) {
+                    const parsedData = JSON.parse(savedData);
+                    let spreadsheetData = parsedData.spreadsheet || [];
+                    if (spreadsheetData.length > 20) spreadsheetData = spreadsheetData.slice(0, 20);
+                    else if (spreadsheetData.length < 20) spreadsheetData = spreadsheetData.concat(Array(20 - spreadsheetData.length).fill().map(() => Array(5).fill('')));
+                    hot.loadData(spreadsheetData);
+                    dateInput.value = parsedData.date || '';
+                }
+                hot.render();
+                console.log('Rows loaded:', hot.countRows());
+            }
+
+            // Save data to localStorage
+            function saveToLocalStorage() {
+                const data = {
+                    spreadsheet: hot.getData(),
+                    date: dateInput.value
+                };
+                localStorage.setItem('backflowReports', JSON.stringify(data));
+            }
+
+            // Load initial data
+            loadFromLocalStorage();
+
+            // Save on every change
+            hot.addHook('afterChange', saveToLocalStorage);
+            dateInput.addEventListener('change', saveToLocalStorage);
+
+            // Export to CSV with custom filename
+            document.getElementById('exportButton').addEventListener('click', () => {
+                const defaultName = 'Backflow_Reports_' + (dateInput.value || 'NoDate');
+                const customName = prompt('Enter file name for CSV export:', defaultName);
+                if (customName) {
+                    const exportPlugin = hot.getPlugin('exportFile');
+                    exportPlugin.downloadFile('csv', { filename: customName });
+                }
+            });
+
+            // Delete data with confirmation
+            const deleteButton = document.getElementById('deleteButton');
+            const confirmationPopup = document.getElementById('confirmationPopup');
+            const confirmYes = document.getElementById('confirmYes');
+            const confirmNo = document.getElementById('confirmNo');
+
+            deleteButton.addEventListener('click', () => {
+                confirmationPopup.style.display = 'block';
+            });
+
+            confirmYes.addEventListener('click', () => {
+                const emptyData = {
+                    spreadsheet: Array(20).fill().map(() => Array(5).fill('')),
+                    date: ''
+                };
+                hot.loadData(emptyData.spreadsheet);
+                dateInput.value = '';
+                localStorage.setItem('backflowReports', JSON.stringify(emptyData));
+                confirmationPopup.style.display = 'none';
+                hot.render();
+            });
+
+            confirmNo.addEventListener('click', () => {
+                confirmationPopup.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>
