@@ -75,6 +75,12 @@
         #exportButton:hover {
             background-color: #555555;
         }
+        #printButton {
+            background-color: #2a5d88;
+        }
+        #printButton:hover {
+            background-color: #3a7dbb;
+        }
         #deleteButton {
             background-color: #662222;
         }
@@ -126,6 +132,55 @@
         .handsontable .ht__highlight {
             background-color: #3a3a3a;
         }
+        @media print {
+            #headerContainer {
+                background-color: white;
+                border-bottom: 2px solid black;
+            }
+            #logoLeft, #logoRight {
+                width: 60px;
+                height: 60px;
+            }
+            #title {
+                color: black;
+                font-size: 28px;
+            }
+            #dateContainer {
+                background-color: white;
+                padding: 5px 0;
+            }
+            #dateInput {
+                border: none;
+                background-color: white;
+                color: black;
+                font-size: 18px;
+            }
+            #spreadsheet {
+                background-color: white;
+                height: auto;
+            }
+            .handsontable {
+                background-color: white;
+                color: black;
+            }
+            .handsontable th {
+                background-color: #f0f0f0;
+                color: black;
+                border: 1px solid #ccc;
+            }
+            .handsontable td {
+                background-color: white;
+                color: black;
+                border: 1px solid #ccc;
+            }
+            #buttonContainer, #confirmationPopup {
+                display: none;
+            }
+            @page {
+                size: auto;
+                margin: 15mm;
+            }
+        }
     </style>
 </head>
 <body>
@@ -140,6 +195,7 @@
     <div id="spreadsheet"></div>
     <div id="buttonContainer">
         <button id="exportButton">Save/Send</button>
+        <button id="printButton">Print</button>
         <button id="deleteButton">Delete Data</button>
     </div>
     <div id="confirmationPopup">
@@ -217,6 +273,16 @@
                 }
             });
 
+            // Print functionality
+            document.getElementById('printButton').addEventListener('click', () => {
+                hot.render();
+                const originalTitle = document.getElementById('title').textContent;
+                const dateValue = dateInput.value || 'No Date';
+                document.getElementById('title').textContent = `Backflow Reports - ${dateValue}`;
+                window.print();
+                document.getElementById('title').textContent = originalTitle;
+            });
+
             // Delete data with confirmation
             const deleteButton = document.getElementById('deleteButton');
             const confirmationPopup = document.getElementById('confirmationPopup');
@@ -243,6 +309,9 @@
                 confirmationPopup.style.display = 'none';
             });
         });
+    </script>
+</body>
+</html>
     </script>
 </body>
 </html>
