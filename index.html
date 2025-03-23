@@ -275,12 +275,28 @@
 
             // Print functionality
             document.getElementById('printButton').addEventListener('click', () => {
+                // Force Handsontable to render all rows
                 hot.render();
+
+                // Temporarily adjust the spreadsheet container height to show all rows
+                const spreadsheetContainer = document.getElementById('spreadsheet');
+                const originalHeight = spreadsheetContainer.style.height;
+                spreadsheetContainer.style.height = 'auto'; // Set to auto to fit all content
+
+                // Update the title with the date
                 const originalTitle = document.getElementById('title').textContent;
                 const dateValue = dateInput.value || 'No Date';
                 document.getElementById('title').textContent = `Backflow Reports - ${dateValue}`;
+
+                // Trigger print
                 window.print();
+
+                // Restore original settings after printing
                 document.getElementById('title').textContent = originalTitle;
+                spreadsheetContainer.style.height = originalHeight;
+
+                // Re-render Handsontable to restore the view
+                hot.render();
             });
 
             // Delete data with confirmation
@@ -309,9 +325,6 @@
                 confirmationPopup.style.display = 'none';
             });
         });
-    </script>
-</body>
-</html>
     </script>
 </body>
 </html>
