@@ -215,18 +215,36 @@
             const container = document.getElementById('spreadsheet');
             const dateInput = document.getElementById('dateInput');
 
-            // Custom renderer to apply inputmode attributes
-            function customInputRenderer(instance, td, row, col, prop, value, cellProperties) {
-                Handsontable.renderers.TextRenderer.apply(this, arguments);
-                if (col < 4) { // Numeric columns: PSI, CV #1, CV #2, RV Opening
-                    td.innerHTML = `<input type="number" inputmode="decimal" pattern="[0-9]*" value="${value || ''}" style="width: 100%; background: #2a2a2a; color: #ffffff; border: none;">`;
-                } else { // Notes column
-                    td.innerHTML = `<input type="text" inputmode="text" value="${value || ''}" style="width: 100%; background: #2a2a2a; color: #ffffff; border: none;">`;
+            // Custom Numeric Editor for iOS
+            class CustomNumericEditor extends Handsontable.editors.NumericEditor {
+                prepare(row, col, prop, td, value, cellProperties) {
+                    super.prepare(row, col, prop, td, value, cellProperties);
+                    const input = this.TEXTAREA;
+                    input.setAttribute('inputmode', 'decimal');
+                    input.setAttribute('pattern', '[0-9]*');
+                    input.setAttribute('type', 'number');
+                    input.style.background = '#2a2a2a';
+                    input.style.color = '#ffffff';
+                    input.style.border = 'none';
                 }
             }
 
-            // Register the custom renderer
-            Handsontable.renderers.registerRenderer('customInputRenderer', customInputRenderer);
+            // Custom Text Editor for iOS
+            class CustomTextEditor extends Handsontable.editors.TextEditor {
+                prepare(row, col, prop, td, value, cellProperties) {
+                    super.prepare(row, col, prop, td, value, cellProperties);
+                    const input = this.TEXTAREA;
+                    input.setAttribute('inputmode', 'text');
+                    input.setAttribute('type', 'text');
+                    input.style.background = '#2a2a2a';
+                    input.style.color = '#ffffff';
+                    input.style.border = 'none';
+                }
+            }
+
+            // Register the custom editors
+            Handsontable.editors.registerEditor('customNumeric', CustomNumericEditor);
+            Handsontable.editors.registerEditor('customText', CustomTextEditor);
 
             // Initialize Handsontable
             const hot = new Handsontable(container, {
@@ -242,31 +260,20 @@
                 licenseKey: 'non-commercial-and-evaluation',
                 stretchH: 'all',
                 cells: function(row, col, prop) {
-                    return {
-                        renderer: 'customInputRenderer', // Use custom renderer
-                        type: col < 4 ? 'numeric' : 'text' // Set type for data handling
-                    };
+                    if (col < 4) { // PSI, CV #1, CV #2, RV Opening
+                        return {
+                            type: 'numeric',
+                            editor: 'customNumeric'
+                        };
+                    } else { // Notes
+                        return {
+                            type: 'text',
+                            editor: 'customText'
+                        };
+                    }
                 },
                 afterScrollVertically: function() {
                     this.render();
-                },
-                afterChange: function(changes, source) {
-                    if (source === 'edit') {
-                        changes.forEach(([row, prop, oldValue, newValue]) => {
-                            const col = parseInt(prop);
-                            const cell = this.getCell(row, col);
-                            const input = cell.querySelector('input');
-                            if (input) input.value = newValue; // Sync input value with Handsontable data
-                        });
-                    }
-                },
-                beforeKeyDown: function(event) {
-                    const selected = this.getSelectedLast();
-                    if (!selected) return;
-                    const [row, col] = selected;
-                    const cell = this.getCell(row, col);
-                    const input = cell.querySelector('input');
-                    if (input) input.focus(); // Focus the input on key press
                 }
             });
 
