@@ -16,12 +16,14 @@
             color: #ffffff;
         }
         #headerContainer {
-            display: flex;
-            justify-content: center; /* Center the logos and title */
-            align-items: center;
-            padding: 10px 20px;
             background-color: #333333;
+            padding: 10px 20px;
             position: relative;
+        }
+        #logoTitleContainer {
+            display: flex;
+            justify-content: center; /* Center logos and title */
+            align-items: center;
         }
         #logoLeft, #logoRight {
             width: 100px; /* Doubled from 50px */
@@ -34,14 +36,13 @@
             font-weight: bold;
             color: #ffffff;
             margin: 0;
-            flex-grow: 0; /* No need to grow now that it's centered */
+            flex-grow: 0; /* No need to grow */
         }
         #dateContactContainer {
             display: flex;
             justify-content: space-between; /* Date on left, Contact on right */
             align-items: center;
-            padding: 10px 20px;
-            background-color: #333333;
+            margin-top: 10px; /* Space between title/logos and date/contact */
         }
         #dateContainer {
             flex-grow: 0; /* Keep date input from stretching */
@@ -192,6 +193,11 @@
                 background-color: white;
                 border-bottom: 2px solid black;
             }
+            #logoTitleContainer {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
             #logoLeft, #logoRight {
                 width: 120px; /* Doubled from 60px */
                 height: 120px; /* Doubled from 60px */
@@ -201,8 +207,9 @@
                 font-size: 28px;
             }
             #dateContactContainer {
-                background-color: white;
-                padding: 5px 20px;
+                display: flex;
+                justify-content: space-between;
+                margin-top: 5px; /* Adjusted for print */
             }
             #dateContainer {
                 flex-grow: 0;
@@ -249,15 +256,17 @@
 </head>
 <body>
     <div id="headerContainer">
-        <img id="logoLeft" src="./logo-left.png" alt="Left Logo">
-        <div id="title">Backflow Reports</div>
-        <img id="logoRight" src="./logo-right.png" alt="Right Logo">
-    </div>
-    <div id="dateContactContainer">
-        <div id="dateContainer">
-            <input type="date" id="dateInput" value="">
+        <div id="logoTitleContainer">
+            <img id="logoLeft" src="./logo-left.png" alt="Left Logo">
+            <div id="title">Backflow Reports</div>
+            <img id="logoRight" src="./logo-right.png" alt="Right Logo">
         </div>
-        <button id="contactButton">Contact Office</button>
+        <div id="dateContactContainer">
+            <div id="dateContainer">
+                <input type="date" id="dateInput" value="">
+            </div>
+            <button id="contactButton">Contact Office</button>
+        </div>
     </div>
     <div id="spreadsheet"></div>
     <div id="buttonContainer">
