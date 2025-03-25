@@ -42,7 +42,7 @@
             display: flex;
             justify-content: space-between; /* Date on left, Contact on right */
             align-items: center;
-            margin-top: 10px; /* Space between title/logos and date/contact */
+            margin-top: 5px; /* Reduced from 10px to bring it closer */
         }
         #dateContainer {
             flex-grow: 0; /* Keep date input from stretching */
@@ -162,7 +162,7 @@
         }
         .handsontable th {
             background-color: #333333;
-            color: #ffffff;
+            color: #ffffff; /* Default column headers (PSI, CV #1, etc.) */
         }
         .handsontable td {
             background-color: #2a2a2a;
@@ -175,13 +175,13 @@
         /* Highlighted row header (number) */
         .handsontable .ht__active_highlight {
             background-color: #333333; /* Keep background same as other headers */
-            color: #FFD700 !important; /* Gold for row number */
+            color: #000000 !important; /* Black for highlighted row number */
             font-weight: bold !important; /* Bold when selected */
         }
         /* Highlighted column header (e.g., PSI) */
         .handsontable th.ht__highlight {
             background-color: #333333; /* Keep background same as other headers */
-            color: #FFD700 !important; /* Gold for column header */
+            color: #000000 !important; /* Black for highlighted column header */
             font-weight: bold !important; /* Bold when selected */
         }
         @media print {
