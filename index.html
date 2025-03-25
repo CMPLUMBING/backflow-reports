@@ -70,27 +70,20 @@
         }
         #emojiCorner {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 30px;
-            height: 30px;
-            background-color: #333333;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
             color: #ffffff;
-            font-size: 20px;
-            text-align: center;
-            line-height: 30px;
-            z-index: 10;
+            background-color: #ff0000; /* Red to make it scream */
+            padding: 5px;
+            border-radius: 4px;
+            z-index: 1000;
         }
-        #spreadsheetContainer {
-            position: relative;
+        #spreadsheet {
             height: 700px;
             width: 100%;
             background-color: #2a2a2a;
             overflow: auto;
-        }
-        #spreadsheet {
-            height: 100%;
-            width: 100%;
         }
         #buttonContainer {
             text-align: center;
@@ -183,6 +176,9 @@
             font-weight: bold;
             text-decoration: none;
         }
+        #printTable {
+            display: none; /* Hidden by default, shown on print */
+        }
         .handsontable {
             color: #ffffff;
             background-color: #2a2a2a;
@@ -245,7 +241,7 @@
                 width: 100%;
                 max-width: 8.5in;
                 margin: 0 auto;
-                position: relative;
+                position: static;
             }
             #logoTitleContainer {
                 display: flex;
@@ -278,10 +274,10 @@
                 font-size: 16px;
                 text-align: center;
             }
-            #contactButton {
-                display: none;
+            #contactButton, #emojiCorner {
+                display: none !important;
             }
-            #spreadsheetContainer, #spreadsheet {
+            #spreadsheet {
                 display: none !important;
             }
             #printTable {
@@ -292,8 +288,6 @@
                 margin: 10px auto;
                 border-collapse: collapse;
                 font-size: 12px;
-                position: static;
-                z-index: 1;
                 background-color: white;
                 color: black;
             }
@@ -311,7 +305,7 @@
                 background-color: white;
                 color: black;
             }
-            #buttonContainer, #confirmationPopup, #contactPopup, #emojiCorner {
+            #buttonContainer, #confirmationPopup, #contactPopup {
                 display: none !important;
             }
             @page {
@@ -323,7 +317,7 @@
                     -webkit-print-color-adjust: exact;
                     color-adjust: exact;
                     opacity: 1 !important;
-                    position: static !important;
+                    display: table !important;
                 }
             }
         }
@@ -331,6 +325,7 @@
 </head>
 <body>
     <div id="headerContainer">
+        <div id="emojiCorner"></div>
         <div id="logoTitleContainer">
             <img id="logoLeft" src="./logo-left.png" alt="Left Logo">
             <div id="title">Backflow Reports</div>
@@ -343,10 +338,11 @@
             <button id="contactButton">Contact Office</button>
         </div>
     </div>
-    <div id="spreadsheetContainer">
-        <div id="emojiCorner"></div>
-        <div id="spreadsheet"></div>
-    </div>
+    <div id="spreadsheet"></div>
+    <table id="printTable">
+        <thead></thead>
+        <tbody></tbody>
+    </table>
     <div id="buttonContainer">
         <button id="exportButton">Save/Send</button>
         <button id="printButton">Print</button>
@@ -371,7 +367,8 @@
             const container = document.getElementById('spreadsheet');
             const dateInput = document.getElementById('dateInput');
             const emojiCorner = document.getElementById('emojiCorner');
-            console.log('Container:', container, 'DateInput:', dateInput, 'EmojiCorner:', emojiCorner);
+            const printTable = document.getElementById('printTable');
+            console.log('Container:', container, 'DateInput:', dateInput, 'EmojiCorner:', emojiCorner, 'PrintTable:', printTable);
 
             // Function to get emoji based on day of the week
             function getDayEmoji() {
@@ -389,8 +386,8 @@
                 }
             }
 
-            // Set emoji initially
-            emojiCorner.textContent = getDayEmoji();
+            // Set emoji with fallback
+            emojiCorner.textContent = `E:${getDayEmoji()}`;
             console.log('Emoji set initially:', emojiCorner.textContent);
 
             // Custom Numeric Editor
@@ -501,7 +498,7 @@
                     }
                 },
                 afterRender: function(isForced) {
-                    emojiCorner.textContent = getDayEmoji();
+                    emojiCorner.textContent = `E:${getDayEmoji()}`;
                     console.log('Emoji updated on render:', emojiCorner.textContent);
                 }
             });
@@ -574,12 +571,15 @@
             // Print functionality
             document.getElementById('printButton').addEventListener('click', () => {
                 console.log('Print button clicked');
-                const printTable = document.createElement('table');
-                printTable.id = 'printTable';
-                const thead = document.createElement('thead');
-                const tbody = document.createElement('tbody');
+                const thead = printTable.querySelector('thead');
+                const tbody = printTable.querySelector('tbody');
                 const headers = ['PSI (PSI)', 'CV #1 (PSID)', 'CV #2 (PSID)', 'VB', 'RV/Air Inlet (PSID)', 'Notes'];
 
+                // Clear previous content
+                thead.innerHTML = '';
+                tbody.innerHTML = '';
+
+                // Build header row
                 const headerRow = document.createElement('tr');
                 headers.forEach(header => {
                     const th = document.createElement('th');
@@ -588,6 +588,7 @@
                 });
                 thead.appendChild(headerRow);
 
+                // Build data rows
                 const data = hot.getData();
                 console.log('Print data:', data);
                 data.forEach((rowData, rowIndex) => {
@@ -604,23 +605,20 @@
                     tbody.appendChild(tr);
                 });
 
-                printTable.appendChild(thead);
-                printTable.appendChild(tbody);
-                document.body.appendChild(printTable);
-                console.log('Print table appended:', printTable.outerHTML);
+                console.log('Print table populated:', printTable.outerHTML);
 
                 const originalTitle = document.getElementById('title').textContent;
                 const dateValue = dateInput.value || 'No Date';
                 document.getElementById('title').textContent = `Backflow Reports - ${dateValue}`;
 
                 setTimeout(() => {
-                    console.log('Before print, table in DOM:', document.getElementById('printTable'));
+                    console.log('Before print, table in DOM:', printTable.outerHTML);
                     window.print();
                     console.log('Print triggered');
                     document.getElementById('title').textContent = originalTitle;
-                    document.body.removeChild(printTable);
-                    console.log('Print table removed');
-                }, 1500);
+                    printTable.style.display = 'none'; // Hide after print
+                    console.log('Print table hidden');
+                }, 2000);
             });
 
             // Delete data with confirmation
