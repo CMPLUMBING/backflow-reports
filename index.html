@@ -208,37 +208,48 @@
             body {
                 background-color: white;
                 color: black;
+                margin: 0;
+                padding: 0;
             }
             #headerContainer {
                 background-color: white;
                 border-bottom: 2px solid black;
+                text-align: center;
+                padding: 10px 0;
+                width: 100%;
+                max-width: 8.5in; /* Standard letter width */
+                margin: 0 auto;
             }
             #logoTitleContainer {
                 display: flex;
                 justify-content: center;
                 align-items: center;
+                width: 100%;
             }
             #logoLeft, #logoRight {
-                width: 120px;
-                height: 120px;
+                width: 80px;
+                height: 80px;
+                margin: 0 15px;
             }
             #title {
                 color: black;
-                font-size: 28px;
+                font-size: 24px;
+                font-weight: bold;
             }
             #dateContactContainer {
-                display: flex;
-                justify-content: space-between;
+                display: block;
+                text-align: center;
                 margin-top: 5px;
             }
             #dateContainer {
-                flex-grow: 0;
+                display: inline-block;
             }
             #dateInput {
                 border: none;
                 background-color: white;
                 color: black;
-                font-size: 18px;
+                font-size: 16px;
+                text-align: center;
             }
             #contactButton {
                 display: none;
@@ -248,18 +259,21 @@
                 height: auto;
             }
             #printTable {
-                width: 100%;
+                width: 90%;
+                max-width: 8in;
+                margin: 10px auto;
                 border-collapse: collapse;
+                font-size: 12px;
             }
             #printTable th, #printTable td {
                 border: 1px solid #ccc;
-                padding: 8px;
-                text-align: left;
-                border-radius: 0;
+                padding: 6px;
+                text-align: center; /* Center table content */
             }
             #printTable th {
                 background-color: #f0f0f0;
                 color: black;
+                font-weight: bold;
             }
             #printTable td {
                 background-color: white;
@@ -269,8 +283,8 @@
                 display: none;
             }
             @page {
-                size: auto;
-                margin: 15mm;
+                size: letter;
+                margin: 0.5in; /* Reduced margins for more space */
             }
         }
     </style>
@@ -372,23 +386,27 @@
                         const psi = data[row][0];
                         const cv1 = data[row][1] === '' || data[row][1] === null ? NaN : parseFloat(data[row][1]);
                         const cv2 = data[row][2] === '' || data[row][2] === null ? NaN : parseFloat(data[row][2]);
-                        const rv = data[row][3];
+                        const rv = data[row][3] === '' || data[row][3] === null ? NaN : parseFloat(data[row][3]);
 
                         const isFilled = psi !== '' && psi !== null && !isNaN(parseFloat(psi)) &&
                                         !isNaN(cv1) && !isNaN(cv2);
-                        const hasAnyValue = (psi !== '' && psi !== null) || !isNaN(cv1) || !isNaN(cv2) || (rv !== '' && rv !== null);
+                        const hasAnyValue = (psi !== '' && psi !== null) || !isNaN(cv1) || !isNaN(cv2) || !isNaN(rv);
                         const cvBelowThreshold = (!isNaN(cv1) && cv1 < 1.0) || (!isNaN(cv2) && cv2 < 1.0);
                         const isValid = isFilled && cv1 >= 1.0 && cv2 >= 1.0;
+                        const cvBothFilled = !isNaN(cv1) && !isNaN(cv2);
+                        const rvInvalid = cvBothFilled && !isNaN(rv); // RV should be blank if CV #1 and CV #2 are filled
 
                         TD.style.backgroundColor = '#2a2a2a';
-                        if (isValid) {
-                            TD.style.backgroundColor = 'rgba(0, 255, 0, 0.2)';
+                        if (rvInvalid) {
+                            TD.style.backgroundColor = 'rgba(255, 0, 0, 0.2)'; // Red if RV has value when CVs are filled
+                        } else if (isValid) {
+                            TD.style.backgroundColor = 'rgba(0, 255, 0, 0.2)'; // Green if valid and RV is blank
                         } else if (hasAnyValue || (isFilled && cvBelowThreshold)) {
-                            TD.style.backgroundColor = 'rgba(255, 0, 0, 0.2)';
+                            TD.style.backgroundColor = 'rgba(255, 0, 0, 0.2)'; // Red for other invalid states
                         }
 
                         if (row === 0 && col === 0) {
-                            console.log(`Row ${row}: PSI=${psi}, CV1=${cv1}, CV2=${cv2}, RV=${rv}, isFilled=${isFilled}, hasAnyValue=${hasAnyValue}, cvBelowThreshold=${cvBelowThreshold}, isValid=${isValid}`);
+                            console.log(`Row ${row}: PSI=${psi}, CV1=${cv1}, CV2=${cv2}, RV=${rv}, isFilled=${isFilled}, hasAnyValue=${hasAnyValue}, cvBelowThreshold=${cvBelowThreshold}, isValid=${isValid}, cvBothFilled=${cvBothFilled}, rvInvalid=${rvInvalid}`);
                         }
                     } catch (error) {
                         console.error('Error in beforeRenderer:', error);
