@@ -68,11 +68,29 @@
         #contactButton:hover {
             background-color: #3a7dbb;
         }
-        #spreadsheet {
+        #emojiCorner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 30px;
+            height: 30px;
+            background-color: #333333;
+            color: #ffffff;
+            font-size: 20px;
+            text-align: center;
+            line-height: 30px;
+            z-index: 10;
+        }
+        #spreadsheetContainer {
+            position: relative;
             height: 700px;
             width: 100%;
             background-color: #2a2a2a;
             overflow: auto;
+        }
+        #spreadsheet {
+            height: 100%;
+            width: 100%;
         }
         #buttonContainer {
             text-align: center;
@@ -208,13 +226,6 @@
         .handsontable td[style*="background-color: rgba(0, 255, 0, 0.2)"] {
             color: #000000 !important;
         }
-        .handsontable .htCore .htCornerHeader {
-            background-color: #333333;
-            color: #ffffff;
-            font-size: 20px;
-            text-align: center;
-            vertical-align: middle;
-        }
         .handsontable .htCore tbody td:nth-child(4) {
             position: relative;
             padding: 0;
@@ -270,7 +281,7 @@
             #contactButton {
                 display: none;
             }
-            #spreadsheet {
+            #spreadsheetContainer, #spreadsheet {
                 display: none !important;
             }
             #printTable {
@@ -281,8 +292,10 @@
                 margin: 10px auto;
                 border-collapse: collapse;
                 font-size: 12px;
-                position: relative;
+                position: static;
                 z-index: 1;
+                background-color: white;
+                color: black;
             }
             #printTable th, #printTable td {
                 border: 1px solid #ccc;
@@ -298,7 +311,7 @@
                 background-color: white;
                 color: black;
             }
-            #buttonContainer, #confirmationPopup, #contactPopup {
+            #buttonContainer, #confirmationPopup, #contactPopup, #emojiCorner {
                 display: none !important;
             }
             @page {
@@ -310,6 +323,7 @@
                     -webkit-print-color-adjust: exact;
                     color-adjust: exact;
                     opacity: 1 !important;
+                    position: static !important;
                 }
             }
         }
@@ -329,7 +343,10 @@
             <button id="contactButton">Contact Office</button>
         </div>
     </div>
-    <div id="spreadsheet"></div>
+    <div id="spreadsheetContainer">
+        <div id="emojiCorner"></div>
+        <div id="spreadsheet"></div>
+    </div>
     <div id="buttonContainer">
         <button id="exportButton">Save/Send</button>
         <button id="printButton">Print</button>
@@ -353,7 +370,8 @@
 
             const container = document.getElementById('spreadsheet');
             const dateInput = document.getElementById('dateInput');
-            console.log('Container:', container, 'DateInput:', dateInput);
+            const emojiCorner = document.getElementById('emojiCorner');
+            console.log('Container:', container, 'DateInput:', dateInput, 'EmojiCorner:', emojiCorner);
 
             // Function to get emoji based on day of the week
             function getDayEmoji() {
@@ -370,6 +388,10 @@
                     default: return '🤔';
                 }
             }
+
+            // Set emoji initially
+            emojiCorner.textContent = getDayEmoji();
+            console.log('Emoji set initially:', emojiCorner.textContent);
 
             // Custom Numeric Editor
             class CustomNumericEditor extends Handsontable.editors.NumericEditor {
@@ -404,13 +426,13 @@
                 }
             }
 
-            // Fixed Checkbox Renderer
+            // Checkbox Renderer
             function customCheckboxRenderer(instance, td, row, col, prop, value, cellProperties) {
                 Handsontable.renderers.CheckboxRenderer.apply(this, arguments);
                 td.style.position = 'relative';
                 const input = td.querySelector('input[type="checkbox"]');
                 if (input) {
-                    input.checked = !!value; // Ensure value drives checked state
+                    input.checked = !!value;
                     input.style.position = 'absolute';
                     input.style.top = '50%';
                     input.style.left = '50%';
@@ -478,20 +500,9 @@
                         TD.style.backgroundColor = '#2a2a2a';
                     }
                 },
-                afterInit: function() {
-                    const corner = this.rootElement.querySelector('.htCore .htCornerHeader');
-                    if (corner) {
-                        corner.textContent = getDayEmoji();
-                        corner.style.fontSize = '20px';
-                        console.log('Emoji set on init:', corner.textContent);
-                    }
-                },
                 afterRender: function(isForced) {
-                    const corner = this.rootElement.querySelector('.htCore .htCornerHeader');
-                    if (corner) {
-                        corner.textContent = getDayEmoji();
-                        console.log('Emoji set on render:', corner.textContent);
-                    }
+                    emojiCorner.textContent = getDayEmoji();
+                    console.log('Emoji updated on render:', emojiCorner.textContent);
                 }
             });
             console.log('Handsontable initialized');
@@ -603,12 +614,13 @@
                 document.getElementById('title').textContent = `Backflow Reports - ${dateValue}`;
 
                 setTimeout(() => {
+                    console.log('Before print, table in DOM:', document.getElementById('printTable'));
                     window.print();
                     console.log('Print triggered');
                     document.getElementById('title').textContent = originalTitle;
                     document.body.removeChild(printTable);
                     console.log('Print table removed');
-                }, 1000);
+                }, 1500);
             });
 
             // Delete data with confirmation
