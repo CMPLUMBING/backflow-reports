@@ -166,23 +166,40 @@
         }
         .handsontable td {
             background-color: #2a2a2a;
-            color: #ffffff;
+            color: #ffffff; /* Default cell text */
             border-color: #444444;
         }
         .handsontable .ht__highlight {
-            background-color: #3a3a3a;
+            background-color: #3a3a3a; /* Highlighted cell background */
         }
         /* Highlighted row header (number) */
         .handsontable .ht__active_highlight {
-            background-color: #333333; /* Keep background same as other headers */
+            background-color: #333333;
             color: #000000 !important; /* Black for highlighted row number */
-            font-weight: bold !important; /* Bold when selected */
+            font-weight: bold !important;
         }
         /* Highlighted column header (e.g., PSI) */
         .handsontable th.ht__highlight {
-            background-color: #333333; /* Keep background same as other headers */
+            background-color: #333333;
             color: #000000 !important; /* Black for highlighted column header */
-            font-weight: bold !important; /* Bold when selected */
+            font-weight: bold !important;
+        }
+        /* Ensure headers stay black during editing */
+        .handsontable .ht__active_highlight.ht__highlight,
+        .handsontable th.ht__active_highlight.ht__highlight {
+            color: #000000 !important; /* Override any active state */
+        }
+        /* Editor input text during typing */
+        .handsontable .htCore .htEditor_active .htEditor_input {
+            color: #000000 !important; /* Black text while typing */
+            background-color: #ffffff !important; /* White background for contrast */
+        }
+        /* Row highlight styles */
+        .handsontable .row-red td {
+            background-color: rgba(255, 0, 0, 0.2) !important; /* Transparent red */
+        }
+        .handsontable .row-green td {
+            background-color: rgba(0, 255, 0, 0.2) !important; /* Transparent green */
         }
         @media print {
             body {
@@ -302,8 +319,8 @@
                     input.setAttribute('inputmode', 'decimal');
                     input.setAttribute('pattern', '[0-9]*');
                     input.setAttribute('type', 'number');
-                    input.style.background = '#2a2a2a';
-                    input.style.color = '#ffffff';
+                    input.style.background = '#ffffff'; /* White background while typing */
+                    input.style.color = '#000000'; /* Black text while typing */
                     input.style.border = 'none';
                 }
             }
@@ -315,8 +332,8 @@
                     const input = this.TEXTAREA;
                     input.setAttribute('inputmode', 'text');
                     input.setAttribute('type', 'text');
-                    input.style.background = '#2a2a2a';
-                    input.style.color = '#ffffff';
+                    input.style.background = '#ffffff'; /* White background while typing */
+                    input.style.color = '#000000'; /* Black text while typing */
                     input.style.border = 'none';
                 }
             }
@@ -357,6 +374,53 @@
             });
             console.log('Handsontable initialized');
 
+            // Function to update row highlights
+            function updateRowHighlights() {
+                const data = hot.getData();
+                for (let row = 0; row < data.length; row++) {
+                    const psi = data[row][0]; // PSI (col 0)
+                    const cv1 = data[row][1]; // CV #1 (col 1)
+                    const cv2 = data[row][2]; // CV #2 (col 2)
+                    const rv = data[row][3];  // RV Opening (col 3)
+
+                    // Check if PSI, CV #1, and CV #2 are all filled (RV optional)
+                    const isComplete = psi !== '' && psi !== null && 
+                                      cv1 !== '' && cv1 !== null && 
+                                      cv2 !== '' && cv2 !== null;
+                    
+                    // Check if any of PSI, CV #1, CV #2, or RV is filled
+                    const hasAnyValue = (psi !== '' && psi !== null) || 
+                                        (cv1 !== '' && cv1 !== null) || 
+                                        (cv2 !== '' && cv2 !== null) || 
+                                        (rv !== '' && rv !== null);
+
+                    // Remove existing classes
+                    hot.removeCellMeta(row, 0, 'className');
+                    hot.removeCellMeta(row, 1, 'className');
+                    hot.removeCellMeta(row, 2, 'className');
+                    hot.removeCellMeta(row, 3, 'className');
+                    hot.removeCellMeta(row, 4, 'className');
+
+                    // Apply new class based on conditions
+                    if (isComplete) {
+                        // Green if PSI, CV #1, CV #2 are filled
+                        hot.setCellMeta(row, 0, 'className', 'row-green');
+                        hot.setCellMeta(row, 1, 'className', 'row-green');
+                        hot.setCellMeta(row, 2, 'className', 'row-green');
+                        hot.setCellMeta(row, 3, 'className', 'row-green');
+                        hot.setCellMeta(row, 4, 'className', 'row-green');
+                    } else if (hasAnyValue) {
+                        // Red if any value is present but not complete
+                        hot.setCellMeta(row, 0, 'className', 'row-red');
+                        hot.setCellMeta(row, 1, 'className', 'row-red');
+                        hot.setCellMeta(row, 2, 'className', 'row-red');
+                        hot.setCellMeta(row, 3, 'className', 'row-red');
+                        hot.setCellMeta(row, 4, 'className', 'row-red');
+                    }
+                }
+                hot.render(); // Re-render to apply changes
+            }
+
             // Load data from localStorage
             function loadFromLocalStorage() {
                 const savedData = localStorage.getItem('backflowReports');
@@ -368,6 +432,7 @@
                     hot.loadData(spreadsheetData);
                     dateInput.value = parsedData.date || '';
                 }
+                updateRowHighlights(); // Apply highlights on load
                 hot.render();
                 console.log('Data loaded, rows:', hot.countRows());
             }
@@ -385,8 +450,11 @@
             // Load initial data
             loadFromLocalStorage();
 
-            // Save on every change
-            hot.addHook('afterChange', saveToLocalStorage);
+            // Save and update highlights on every change
+            hot.addHook('afterChange', (changes, source) => {
+                saveToLocalStorage();
+                updateRowHighlights();
+            });
             dateInput.addEventListener('change', saveToLocalStorage);
 
             // Export to CSV with custom filename
@@ -463,6 +531,7 @@
                 dateInput.value = '';
                 localStorage.setItem('backflowReports', JSON.stringify(emptyData));
                 confirmationPopup.style.display = 'none';
+                updateRowHighlights(); // Reset highlights
                 hot.render();
             });
 
