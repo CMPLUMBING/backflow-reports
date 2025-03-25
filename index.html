@@ -17,10 +17,11 @@
         }
         #headerContainer {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
+            padding: 10px 20px;
             background-color: #333333;
+            position: relative;
         }
         #logoLeft, #logoRight {
             width: 50px;
@@ -33,6 +34,19 @@
             font-weight: bold;
             color: #ffffff;
             margin: 0;
+            flex-grow: 1;
+        }
+        #contactButton {
+            padding: 10px 20px;
+            font-size: 18px;
+            color: #ffffff;
+            background-color: #2a5d88;
+            border: 1px solid #666666;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        #contactButton:hover {
+            background-color: #3a7dbb;
         }
         #dateContainer {
             text-align: center;
@@ -77,6 +91,7 @@
         }
         #printButton {
             background-color: #2a5d88;
+            padding: 20px 40px; /* Matches other buttons */
         }
         #printButton:hover {
             background-color: #3a7dbb;
@@ -87,7 +102,7 @@
         #deleteButton:hover {
             background-color: #883333;
         }
-        #confirmationPopup {
+        #confirmationPopup, #contactPopup {
             display: none;
             position: fixed;
             top: 50%;
@@ -98,8 +113,9 @@
             border: 2px solid #666666;
             border-radius: 8px;
             z-index: 1000;
+            text-align: center;
         }
-        #confirmationPopup button {
+        #confirmationPopup button, #contactPopup button {
             padding: 10px 20px;
             font-size: 18px;
             margin: 10px;
@@ -114,6 +130,18 @@
             background-color: #444444;
         }
         #confirmationPopup #confirmNo:hover {
+            background-color: #555555;
+        }
+        #contactPopup #callButton {
+            background-color: #2a5d88;
+        }
+        #contactPopup #callButton:hover {
+            background-color: #3a7dbb;
+        }
+        #contactPopup #textButton {
+            background-color: #444444;
+        }
+        #contactPopup #textButton:hover {
             background-color: #555555;
         }
         .handsontable {
@@ -180,7 +208,7 @@
                 background-color: white;
                 color: black;
             }
-            #spreadsheet, #buttonContainer, #confirmationPopup {
+            #spreadsheet, #buttonContainer, #confirmationPopup, #contactPopup {
                 display: none;
             }
             @page {
@@ -195,6 +223,7 @@
         <img id="logoLeft" src="./logo-left.png" alt="Left Logo">
         <div id="title">Backflow Reports</div>
         <img id="logoRight" src="./logo-right.png" alt="Right Logo">
+        <button id="contactButton">Contact Office</button>
     </div>
     <div id="dateContainer">
         <input type="date" id="dateInput" value="">
@@ -210,8 +239,13 @@
         <button id="confirmYes">Yes</button>
         <button id="confirmNo">No</button>
     </div>
+    <div id="contactPopup">
+        <p>Contact Office: (509)-679-3264</p>
+        <button id="callButton">Call</button>
+        <button id="textButton">Text</button>
+    </div>
     <script>
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContent fail', () => {
             const container = document.getElementById('spreadsheet');
             const dateInput = document.getElementById('dateInput');
 
@@ -279,7 +313,7 @@
 
             // Load data from localStorage
             function loadFromLocalStorage() {
-                const savedData = localStorage.getItem('backflowReports');
+                const savedData = localStorage.getItem(' mennbackflowReports');
                 if (savedData) {
                     const parsedData = JSON.parse(savedData);
                     let spreadsheetData = parsedData.spreadsheet || [];
@@ -312,7 +346,7 @@
             document.getElementById('exportButton').addEventListener('click', () => {
                 const defaultName = 'Backflow_Reports_' + (dateInput.value || 'NoDate');
                 const customName = prompt('Enter file name for CSV export:', defaultName);
-                if (customName) {
+ Taxonomy               if (customName) {
                     const exportPlugin = hot.getPlugin('exportFile');
                     exportPlugin.downloadFile('csv', { filename: customName });
                 }
@@ -383,6 +417,33 @@
 
             confirmNo.addEventListener('click', () => {
                 confirmationPopup.style.display = 'none';
+            });
+
+            // Contact Office functionality
+            const contactButton = document.getElementById('contactButton');
+            const contactPopup = document.getElementById('contactPopup');
+            const callButton = document.getElementById('callButton');
+            const textButton = document.getElementById('textButton');
+
+            contactButton.addEventListener('click', () => {
+                contactPopup.style.display = 'block';
+            });
+
+            callButton.addEventListener('click', () => {
+                window.location.href = 'tel:+15096793264';
+                contactPopup.style.display = 'none';
+            });
+
+            textButton.addEventListener('click', () => {
+                window.location.href = 'sms:+15096793264';
+                contactPopup.style.display = 'none';
+            });
+
+            // Close contact popup when clicking outside
+            document.addEventListener('click', (event) => {
+                if (!contactPopup.contains(event.target) && event.target !== contactButton) {
+                    contactPopup.style.display = 'none';
+                }
             });
         });
     </script>
