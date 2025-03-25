@@ -177,7 +177,7 @@
         .handsontable td {
             background-color: #2a2a2a;
             color: #ffffff;
-            border-color: #444444;
+            border: 1px solid #444444; /* Consistent borders */
         }
         .handsontable .ht__highlight {
             background-color: #3a3a3a;
@@ -215,18 +215,10 @@
             text-align: center;
             vertical-align: middle;
         }
-        /* Center checkboxes in VB column (col 3) */
-        .handsontable .htCore tbody td:nth-child(4) { /* 4th column (index 3 + 1 for row header) */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 0; /* Remove padding to avoid offset */
-        }
-        .handsontable .htCheckboxRendererInput {
+        /* Checkbox centering */
+        .handsontable .htCore tbody td:nth-child(4) {
             position: relative;
-            top: 0;
-            left: 0;
-            margin: 0;
+            padding: 0;
         }
         @media print {
             body {
@@ -402,16 +394,31 @@
                 }
             }
 
-            // Register the custom editors
+            // Custom Checkbox Renderer for centering
+            function customCheckboxRenderer(instance, td, row, col, prop, value, cellProperties) {
+                Handsontable.renderers.CheckboxRenderer.apply(this, arguments);
+                td.style.position = 'relative';
+                const input = td.querySelector('input[type="checkbox"]');
+                if (input) {
+                    input.style.position = 'absolute';
+                    input.style.top = '50%';
+                    input.style.left = '50%';
+                    input.style.transform = 'translate(-50%, -50%)';
+                    input.style.margin = '0';
+                }
+            }
+
+            // Register editors and renderer
             Handsontable.editors.registerEditor('customNumeric', CustomNumericEditor);
             Handsontable.editors.registerEditor('customText', CustomTextEditor);
+            Handsontable.renderers.registerRenderer('customCheckbox', customCheckboxRenderer);
 
             // Initialize Handsontable
             const hot = new Handsontable(container, {
                 data: Array(20).fill().map(() => Array(6).fill('')),
                 rowHeaders: true,
                 colHeaders: ['PSI (PSI)', 'CV #1 (PSID)', 'CV #2 (PSID)', 'VB', 'RV/Air Inlet (PSID)', 'Notes'],
-                colWidths: [120, 120, 120, 60, 150, 200],
+                colWidths: [120, 120, 120, 50, 150, 200], // Shrunk VB to 50px
                 rowHeights: 30,
                 minRows: 20,
                 maxRows: 20,
@@ -419,10 +426,9 @@
                 contextMenu: true,
                 licenseKey: 'non-commercial-and-evaluation',
                 stretchH: 'all',
-                cornerHeader: getDayEmoji(),
                 cells: function(row, col, prop) {
                     if (col === 3) {
-                        return { type: 'checkbox' };
+                        return { type: 'checkbox', renderer: 'customCheckbox' };
                     } else if (col < 3 || col === 4) {
                         return { type: 'numeric', editor: 'customNumeric' };
                     } else {
@@ -466,6 +472,13 @@
                 },
                 afterScrollVertically: function() {
                     this.render();
+                },
+                afterInit: function() {
+                    // Set emoji in top-left corner
+                    const corner = this.rootElement.querySelector('.htCore .htCornerHeader');
+                    if (corner) {
+                        corner.textContent = getDayEmoji();
+                    }
                 }
             });
             console.log('Handsontable initialized');
