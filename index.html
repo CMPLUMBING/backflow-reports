@@ -36,10 +36,24 @@
             margin: 0;
             flex-grow: 0; /* No need to grow now that it's centered */
         }
-        #contactButtonContainer {
-            text-align: center;
-            padding: 10px 0;
+        #dateContactContainer {
+            display: flex;
+            justify-content: space-between; /* Date on left, Contact on right */
+            align-items: center;
+            padding: 10px 20px;
             background-color: #333333;
+        }
+        #dateContainer {
+            flex-grow: 0; /* Keep date input from stretching */
+        }
+        #dateInput {
+            padding: 8px;
+            font-size: 24px;
+            background-color: #2a2a2a;
+            color: #ffffff;
+            border: 1px solid #666666;
+            border-radius: 4px;
+            width: 200px;
         }
         #contactButton {
             padding: 10px 20px;
@@ -52,20 +66,6 @@
         }
         #contactButton:hover {
             background-color: #3a7dbb;
-        }
-        #dateContainer {
-            text-align: center;
-            padding: 10px 0;
-            background-color: #333333;
-        }
-        #dateInput {
-            padding: 8px;
-            font-size: 24px;
-            background-color: #2a2a2a;
-            color: #ffffff;
-            border: 1px solid #666666;
-            border-radius: 4px;
-            width: 200px;
         }
         #spreadsheet {
             height: 700px;
@@ -200,18 +200,21 @@
                 color: black;
                 font-size: 28px;
             }
-            #contactButtonContainer {
-                display: none; /* Hide Contact button when printing */
+            #dateContactContainer {
+                background-color: white;
+                padding: 5px 20px;
             }
             #dateContainer {
-                background-color: white;
-                padding: 5px 0;
+                flex-grow: 0;
             }
             #dateInput {
                 border: none;
                 background-color: white;
                 color: black;
                 font-size: 18px;
+            }
+            #contactButton {
+                display: none; /* Hide Contact button when printing */
             }
             #spreadsheet, #printTable {
                 background-color: white;
@@ -250,11 +253,11 @@
         <div id="title">Backflow Reports</div>
         <img id="logoRight" src="./logo-right.png" alt="Right Logo">
     </div>
-    <div id="contactButtonContainer">
+    <div id="dateContactContainer">
+        <div id="dateContainer">
+            <input type="date" id="dateInput" value="">
+        </div>
         <button id="contactButton">Contact Office</button>
-    </div>
-    <div id="dateContainer">
-        <input type="date" id="dateInput" value="">
     </div>
     <div id="spreadsheet"></div>
     <div id="buttonContainer">
