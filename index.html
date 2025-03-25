@@ -305,7 +305,6 @@
                 size: letter;
                 margin: 0.5in;
             }
-            /* iOS-specific fix */
             @media only screen and (max-device-width: 1024px) {
                 #printTable {
                     -webkit-print-color-adjust: exact;
@@ -405,34 +404,26 @@
                 }
             }
 
-            // Custom Checkbox Renderer
+            // Fixed Checkbox Renderer
             function customCheckboxRenderer(instance, td, row, col, prop, value, cellProperties) {
                 Handsontable.renderers.CheckboxRenderer.apply(this, arguments);
                 td.style.position = 'relative';
                 const input = td.querySelector('input[type="checkbox"]');
                 if (input) {
+                    input.checked = !!value; // Ensure value drives checked state
                     input.style.position = 'absolute';
                     input.style.top = '50%';
                     input.style.left = '50%';
                     input.style.transform = 'translate(-50%, -50%)';
                     input.style.margin = '0';
+                    console.log(`Checkbox at row ${row}, col ${col}: value=${value}, checked=${input.checked}`);
                 }
             }
 
-            // Custom Corner Renderer for Emoji
-            function cornerRenderer(instance, td, row, col, prop, value, cellProperties) {
-                td.textContent = getDayEmoji();
-                td.style.textAlign = 'center';
-                td.style.verticalAlign = 'middle';
-                td.style.fontSize = '20px';
-                return td;
-            }
-
-            // Register editors and renderers
+            // Register editors and renderer
             Handsontable.editors.registerEditor('customNumeric', CustomNumericEditor);
             Handsontable.editors.registerEditor('customText', CustomTextEditor);
             Handsontable.renderers.registerRenderer('customCheckbox', customCheckboxRenderer);
-            Handsontable.renderers.registerRenderer('cornerRenderer', cornerRenderer);
 
             // Initialize Handsontable
             const hot = new Handsontable(container, {
@@ -447,6 +438,15 @@
                 contextMenu: true,
                 licenseKey: 'non-commercial-and-evaluation',
                 stretchH: 'all',
+                cells: function(row, col, prop) {
+                    if (col === 3) {
+                        return { type: 'checkbox', renderer: 'customCheckbox' };
+                    } else if (col < 3 || col === 4) {
+                        return { type: 'numeric', editor: 'customNumeric' };
+                    } else {
+                        return { type: 'text', editor: 'customText' };
+                    }
+                },
                 beforeRenderer: function(TD, row, col, prop, value, cellProperties) {
                     try {
                         const data = hot.getData();
@@ -478,12 +478,19 @@
                         TD.style.backgroundColor = '#2a2a2a';
                     }
                 },
-                afterScrollVertically: function() {
-                    this.render();
+                afterInit: function() {
+                    const corner = this.rootElement.querySelector('.htCore .htCornerHeader');
+                    if (corner) {
+                        corner.textContent = getDayEmoji();
+                        corner.style.fontSize = '20px';
+                        console.log('Emoji set on init:', corner.textContent);
+                    }
                 },
-                afterRenderer: function(TD, row, col, prop, value, cellProperties) {
-                    if (row === -1 && col === -1) {
-                        cornerRenderer(this, TD, row, col, prop, value, cellProperties);
+                afterRender: function(isForced) {
+                    const corner = this.rootElement.querySelector('.htCore .htCornerHeader');
+                    if (corner) {
+                        corner.textContent = getDayEmoji();
+                        console.log('Emoji set on render:', corner.textContent);
                     }
                 }
             });
@@ -601,7 +608,7 @@
                     document.getElementById('title').textContent = originalTitle;
                     document.body.removeChild(printTable);
                     console.log('Print table removed');
-                }, 500);
+                }, 1000);
             });
 
             // Delete data with confirmation
