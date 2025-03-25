@@ -245,42 +245,15 @@
         <button id="textButton">Text</button>
     </div>
     <script>
-        window.addEventListener('DOMContent fail', () => {
+        console.log('Script started');
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM fully loaded');
+
             const container = document.getElementById('spreadsheet');
             const dateInput = document.getElementById('dateInput');
+            console.log('Container:', container, 'DateInput:', dateInput);
 
-            // Custom Numeric Editor for iOS
-            class CustomNumericEditor extends Handsontable.editors.NumericEditor {
-                prepare(row, col, prop, td, value, cellProperties) {
-                    super.prepare(row, col, prop, td, value, cellProperties);
-                    const input = this.TEXTAREA;
-                    input.setAttribute('inputmode', 'decimal');
-                    input.setAttribute('pattern', '[0-9]*');
-                    input.setAttribute('type', 'number');
-                    input.style.background = '#2a2a2a';
-                    input.style.color = '#ffffff';
-                    input.style.border = 'none';
-                }
-            }
-
-            // Custom Text Editor for iOS
-            class CustomTextEditor extends Handsontable.editors.TextEditor {
-                prepare(row, col, prop, td, value, cellProperties) {
-                    super.prepare(row, col, prop, td, value, cellProperties);
-                    const input = this.TEXTAREA;
-                    input.setAttribute('inputmode', 'text');
-                    input.setAttribute('type', 'text');
-                    input.style.background = '#2a2a2a';
-                    input.style.color = '#ffffff';
-                    input.style.border = 'none';
-                }
-            }
-
-            // Register the custom editors
-            Handsontable.editors.registerEditor('customNumeric', CustomNumericEditor);
-            Handsontable.editors.registerEditor('customText', CustomTextEditor);
-
-            // Initialize Handsontable
+            // Initialize Handsontable with default editors
             const hot = new Handsontable(container, {
                 data: Array(20).fill().map(() => Array(5).fill('')),
                 rowHeaders: true,
@@ -294,26 +267,19 @@
                 licenseKey: 'non-commercial-and-evaluation',
                 stretchH: 'all',
                 cells: function(row, col, prop) {
-                    if (col < 4) { // PSI, CV #1, CV #2, RV Opening
-                        return {
-                            type: 'numeric',
-                            editor: 'customNumeric'
-                        };
-                    } else { // Notes
-                        return {
-                            type: 'text',
-                            editor: 'customText'
-                        };
-                    }
+                    return {
+                        type: col < 4 ? 'numeric' : 'text'
+                    };
                 },
                 afterScrollVertically: function() {
                     this.render();
                 }
             });
+            console.log('Handsontable initialized');
 
             // Load data from localStorage
             function loadFromLocalStorage() {
-                const savedData = localStorage.getItem(' mennbackflowReports');
+                const savedData = localStorage.getItem('backflowReports');
                 if (savedData) {
                     const parsedData = JSON.parse(savedData);
                     let spreadsheetData = parsedData.spreadsheet || [];
@@ -323,7 +289,7 @@
                     dateInput.value = parsedData.date || '';
                 }
                 hot.render();
-                console.log('Rows loaded:', hot.countRows());
+                console.log('Data loaded, rows:', hot.countRows());
             }
 
             // Save data to localStorage
@@ -333,6 +299,7 @@
                     date: dateInput.value
                 };
                 localStorage.setItem('backflowReports', JSON.stringify(data));
+                console.log('Data saved');
             }
 
             // Load initial data
@@ -344,9 +311,10 @@
 
             // Export to CSV with custom filename
             document.getElementById('exportButton').addEventListener('click', () => {
+                console.log('Export button clicked');
                 const defaultName = 'Backflow_Reports_' + (dateInput.value || 'NoDate');
                 const customName = prompt('Enter file name for CSV export:', defaultName);
- Taxonomy               if (customName) {
+                if (customName) {
                     const exportPlugin = hot.getPlugin('exportFile');
                     exportPlugin.downloadFile('csv', { filename: customName });
                 }
@@ -354,6 +322,7 @@
 
             // Print functionality
             document.getElementById('printButton').addEventListener('click', () => {
+                console.log('Print button clicked');
                 const printTable = document.createElement('table');
                 printTable.id = 'printTable';
                 const thead = document.createElement('thead');
@@ -400,10 +369,12 @@
             const confirmNo = document.getElementById('confirmNo');
 
             deleteButton.addEventListener('click', () => {
+                console.log('Delete button clicked');
                 confirmationPopup.style.display = 'block';
             });
 
             confirmYes.addEventListener('click', () => {
+                console.log('Confirm Yes clicked');
                 const emptyData = {
                     spreadsheet: Array(20).fill().map(() => Array(5).fill('')),
                     date: ''
@@ -416,6 +387,7 @@
             });
 
             confirmNo.addEventListener('click', () => {
+                console.log('Confirm No clicked');
                 confirmationPopup.style.display = 'none';
             });
 
@@ -426,15 +398,18 @@
             const textButton = document.getElementById('textButton');
 
             contactButton.addEventListener('click', () => {
+                console.log('Contact button clicked');
                 contactPopup.style.display = 'block';
             });
 
             callButton.addEventListener('click', () => {
+                console.log('Call button clicked');
                 window.location.href = 'tel:+15096793264';
                 contactPopup.style.display = 'none';
             });
 
             textButton.addEventListener('click', () => {
+                console.log('Text button clicked');
                 window.location.href = 'sms:+15096793264';
                 contactPopup.style.display = 'none';
             });
@@ -445,6 +420,8 @@
                     contactPopup.style.display = 'none';
                 }
             });
+
+            console.log('All event listeners attached');
         });
     </script>
 </body>
