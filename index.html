@@ -204,6 +204,13 @@
         .handsontable td[style*="rgba(0, 255, 0, 0.2)"] {
             color: #000000 !important;
         }
+        .handsontable .htCore .htCornerHeader {
+            background-color: #333333;
+            color: #ffffff;
+            font-size: 20px;
+            text-align: center;
+            vertical-align: middle;
+        }
         @media print {
             body {
                 background-color: white;
@@ -217,7 +224,7 @@
                 text-align: center;
                 padding: 10px 0;
                 width: 100%;
-                max-width: 8.5in; /* Standard letter width */
+                max-width: 8.5in;
                 margin: 0 auto;
             }
             #logoTitleContainer {
@@ -268,7 +275,7 @@
             #printTable th, #printTable td {
                 border: 1px solid #ccc;
                 padding: 6px;
-                text-align: center; /* Center table content */
+                text-align: center;
             }
             #printTable th {
                 background-color: #f0f0f0;
@@ -284,7 +291,7 @@
             }
             @page {
                 size: letter;
-                margin: 0.5in; /* Reduced margins for more space */
+                margin: 0.5in;
             }
         }
     </style>
@@ -329,6 +336,22 @@
             const dateInput = document.getElementById('dateInput');
             console.log('Container:', container, 'DateInput:', dateInput);
 
+            // Function to get emoji based on day of the week
+            function getDayEmoji() {
+                const today = new Date();
+                const dayOfWeek = today.getDay();
+                switch (dayOfWeek) {
+                    case 0: return '😴'; // Sunday
+                    case 1: return '😩'; // Monday
+                    case 2: return '😐'; // Tuesday
+                    case 3: return '😊'; // Wednesday
+                    case 4: return '🙂'; // Thursday
+                    case 5: return '🥳'; // Friday
+                    case 6: return '😎'; // Saturday
+                    default: return '🤔';
+                }
+            }
+
             // Custom Numeric Editor
             class CustomNumericEditor extends Handsontable.editors.NumericEditor {
                 prepare(row, col, prop, td, value, cellProperties) {
@@ -362,51 +385,56 @@
 
             // Initialize Handsontable
             const hot = new Handsontable(container, {
-                data: Array(20).fill().map(() => Array(5).fill('')),
+                data: Array(20).fill().map(() => Array(6).fill('')), // Increased to 6 columns
                 rowHeaders: true,
-                colHeaders: ['PSI (PSI)', 'CV #1 (PSID)', 'CV #2 (PSID)', 'RV/Air Inlet (PSID)', 'Notes'],
-                colWidths: [120, 120, 120, 150, 200],
+                colHeaders: ['PSI (PSI)', 'CV #1 (PSID)', 'CV #2 (PSID)', 'PVB/SVB', 'RV/Air Inlet (PSID)', 'Notes'],
+                colWidths: [120, 120, 120, 100, 150, 200], // Adjusted widths, added 100 for PVB/SVB
                 rowHeights: 40,
                 minRows: 20,
                 maxRows: 20,
-                minCols: 5,
+                minCols: 6, // Increased to 6
                 contextMenu: true,
                 licenseKey: 'non-commercial-and-evaluation',
                 stretchH: 'all',
+                cornerHeader: getDayEmoji(),
                 cells: function(row, col, prop) {
-                    if (col < 4) {
+                    if (col === 3) { // PVB/SVB column
+                        return { type: 'checkbox' };
+                    } else if (col < 3 || col === 4) { // PSI, CV #1, CV #2, RV/Air Inlet
                         return { type: 'numeric', editor: 'customNumeric' };
-                    } else {
+                    } else { // Notes
                         return { type: 'text', editor: 'customText' };
                     }
                 },
                 beforeRenderer: function(TD, row, col, prop, value, cellProperties) {
                     try {
                         const data = hot.getData();
-                        const psi = data[row][0];
+                        const psi = data[row][0] === '' || data[row][0] === null ? NaN : parseFloat(data[row][0]);
                         const cv1 = data[row][1] === '' || data[row][1] === null ? NaN : parseFloat(data[row][1]);
                         const cv2 = data[row][2] === '' || data[row][2] === null ? NaN : parseFloat(data[row][2]);
-                        const rv = data[row][3] === '' || data[row][3] === null ? NaN : parseFloat(data[row][3]);
+                        const pvbSvb = data[row][3]; // Checkbox value (true/false)
+                        const rv = data[row][4] === '' || data[row][4] === null ? NaN : parseFloat(data[row][4]);
 
-                        const isFilled = psi !== '' && psi !== null && !isNaN(parseFloat(psi)) &&
-                                        !isNaN(cv1) && !isNaN(cv2);
-                        const hasAnyValue = (psi !== '' && psi !== null) || !isNaN(cv1) || !isNaN(cv2) || !isNaN(rv);
+                        const hasAnyValue = !isNaN(psi) || !isNaN(cv1) || !isNaN(cv2) || !isNaN(rv);
+                        const isFilledNormal = !isNaN(psi) && !isNaN(cv1) && !isNaN(cv2); // PSI, CV #1, CV #2 filled
                         const cvBelowThreshold = (!isNaN(cv1) && cv1 < 1.0) || (!isNaN(cv2) && cv2 < 1.0);
-                        const isValid = isFilled && cv1 >= 1.0 && cv2 >= 1.0;
-                        const cvBothFilled = !isNaN(cv1) && !isNaN(cv2);
-                        const rvInvalid = cvBothFilled && !isNaN(rv); // RV should be blank if CV #1 and CV #2 are filled
+                        const isValidNormal = isFilledNormal && cv1 >= 1.0 && cv2 >= 1.0; // Normal valid state
+                        const isFilledPvbSvb = !isNaN(psi) && !isNaN(cv1) && !isNaN(rv) && (cv2 === '' || isNaN(cv2)); // PVB/SVB valid state
+                        const cv2InvalidWithPvbSvb = pvbSvb && !isNaN(cv2); // CV #2 filled when PVB/SVB checked
 
                         TD.style.backgroundColor = '#2a2a2a';
-                        if (rvInvalid) {
-                            TD.style.backgroundColor = 'rgba(255, 0, 0, 0.2)'; // Red if RV has value when CVs are filled
-                        } else if (isValid) {
-                            TD.style.backgroundColor = 'rgba(0, 255, 0, 0.2)'; // Green if valid and RV is blank
-                        } else if (hasAnyValue || (isFilled && cvBelowThreshold)) {
-                            TD.style.backgroundColor = 'rgba(255, 0, 0, 0.2)'; // Red for other invalid states
+                        if (pvbSvb && cv2InvalidWithPvbSvb) {
+                            TD.style.backgroundColor = 'rgba(255, 0, 0, 0.2)'; // Red if CV #2 filled with PVB/SVB checked
+                        } else if (pvbSvb && isFilledPvbSvb && cv1 >= 1.0) {
+                            TD.style.backgroundColor = 'rgba(0, 255, 0, 0.2)'; // Green if PVB/SVB valid
+                        } else if (!pvbSvb && isValidNormal) {
+                            TD.style.backgroundColor = 'rgba(0, 255, 0, 0.2)'; // Green if normal valid
+                        } else if (hasAnyValue || (isFilledNormal && cvBelowThreshold)) {
+                            TD.style.backgroundColor = 'rgba(255, 0, 0, 0.2)'; // Red for incomplete or invalid
                         }
 
                         if (row === 0 && col === 0) {
-                            console.log(`Row ${row}: PSI=${psi}, CV1=${cv1}, CV2=${cv2}, RV=${rv}, isFilled=${isFilled}, hasAnyValue=${hasAnyValue}, cvBelowThreshold=${cvBelowThreshold}, isValid=${isValid}, cvBothFilled=${cvBothFilled}, rvInvalid=${rvInvalid}`);
+                            console.log(`Row ${row}: PSI=${psi}, CV1=${cv1}, CV2=${cv2}, PVB/SVB=${pvbSvb}, RV=${rv}, hasAnyValue=${hasAnyValue}, isFilledNormal=${isFilledNormal}, cvBelowThreshold=${cvBelowThreshold}, isValidNormal=${isValidNormal}, isFilledPvbSvb=${isFilledPvbSvb}, cv2InvalidWithPvbSvb=${cv2InvalidWithPvbSvb}`);
                         }
                     } catch (error) {
                         console.error('Error in beforeRenderer:', error);
@@ -423,11 +451,13 @@
             hot.addHook('afterChange', (changes, source) => {
                 if (changes && source === 'edit') {
                     changes.forEach(([row, col, oldValue, newValue]) => {
-                        if (col >= 1 && col <= 3 && newValue !== null && newValue !== '') {
-                            let numStr = newValue.toString().replace('.', '');
-                            if (numStr.length > 1) {
-                                numStr = numStr.slice(0, -1) + '.' + numStr.slice(-1);
-                                hot.setDataAtCell(row, col, numStr, 'autoDecimal');
+                        if ((col >= 1 && col <= 2) || col === 4) { // CV #1, CV #2, RV/Air Inlet
+                            if (newValue !== null && newValue !== '') {
+                                let numStr = newValue.toString().replace('.', '');
+                                if (numStr.length > 1) {
+                                    numStr = numStr.slice(0, -1) + '.' + numStr.slice(-1);
+                                    hot.setDataAtCell(row, col, numStr, 'autoDecimal');
+                                }
                             }
                         }
                     });
@@ -442,7 +472,12 @@
                     const parsedData = JSON.parse(savedData);
                     let spreadsheetData = parsedData.spreadsheet || [];
                     if (spreadsheetData.length > 20) spreadsheetData = spreadsheetData.slice(0, 20);
-                    else if (spreadsheetData.length < 20) spreadsheetData = spreadsheetData.concat(Array(20 - spreadsheetData.length).fill().map(() => Array(5).fill('')));
+                    else if (spreadsheetData.length < 20) spreadsheetData = spreadsheetData.concat(Array(20 - spreadsheetData.length).fill().map(() => Array(6).fill('')));
+                    // Ensure 6 columns in loaded data
+                    spreadsheetData = spreadsheetData.map(row => {
+                        while (row.length < 6) row.push('');
+                        return row.slice(0, 6);
+                    });
                     hot.loadData(spreadsheetData);
                     dateInput.value = parsedData.date || '';
                 }
@@ -484,7 +519,7 @@
                 printTable.id = 'printTable';
                 const thead = document.createElement('thead');
                 const tbody = document.createElement('tbody');
-                const headers = ['PSI (PSI)', 'CV #1 (PSID)', 'CV #2 (PSID)', 'RV/Air Inlet (PSID)', 'Notes'];
+                const headers = ['PSI (PSI)', 'CV #1 (PSID)', 'CV #2 (PSID)', 'PVB/SVB', 'RV/Air Inlet (PSID)', 'Notes'];
 
                 const headerRow = document.createElement('tr');
                 headers.forEach(header => {
@@ -497,9 +532,13 @@
                 const data = hot.getData();
                 data.forEach(rowData => {
                     const tr = document.createElement('tr');
-                    rowData.forEach(cell => {
+                    rowData.forEach((cell, index) => {
                         const td = document.createElement('td');
-                        td.textContent = cell || '';
+                        if (index === 3) { // PVB/SVB column
+                            td.textContent = cell === true ? '✓' : '';
+                        } else {
+                            td.textContent = cell || '';
+                        }
                         tr.appendChild(td);
                     });
                     tbody.appendChild(tr);
@@ -533,7 +572,7 @@
             confirmYes.addEventListener('click', () => {
                 console.log('Confirm Yes clicked');
                 const emptyData = {
-                    spreadsheet: Array(20).fill().map(() => Array(5).fill('')),
+                    spreadsheet: Array(20).fill().map(() => Array(6).fill('')),
                     date: ''
                 };
                 hot.loadData(emptyData.spreadsheet);
