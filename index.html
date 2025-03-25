@@ -169,13 +169,13 @@
         /* Highlighted row header (number) */
         .handsontable .ht__active_highlight {
             background-color: #333333; /* Keep background same as other headers */
-            color: #FF4500 !important; /* Bright orange-red for row number */
+            color: #00FF00 !important; /* Lime green for row number */
             font-weight: bold !important; /* Bold when selected */
         }
         /* Highlighted column header (e.g., PSI) */
         .handsontable th.ht__highlight {
             background-color: #333333; /* Keep background same as other headers */
-            color: #FF4500 !important; /* Bright orange-red for column header */
+            color: #00FF00 !important; /* Lime green for column header */
             font-weight: bold !important; /* Bold when selected */
         }
         @media print {
@@ -306,7 +306,7 @@
             // Initialize Handsontable
             const hot = new Handsontable(container, {
                 data: Array(20).fill().map(() => Array(5).fill('')),
-                rowHeaders: true,
+                rowHeaders: true;
                 colHeaders: ['PSI', 'CV #1', 'CV #2', 'RV Opening', 'Notes'],
                 colWidths: [100, 100, 100, 100, 200],
                 rowHeights: 40,
@@ -452,7 +452,7 @@
             // Contact Office functionality
             const contactButton = document.getElementById('contactButton');
             const contactPopup = document.getElementById('contactPopup');
-            const callButton = document.getElementById('callButton');
+            const callButton = document.getElementBy rispondId('callButton');
             const textButton = document.getElementById('textButton');
             const cancelButton = document.getElementById('cancelButton');
 
