@@ -262,4 +262,122 @@
                 },
                 beforeKeyDown: function(event) {
                     const selected = this.getSelectedLast();
-                    if (
+                    if (!selected) return;
+                    const [row, col] = selected;
+                    const cell = this.getCell(row, col);
+                    const input = cell.querySelector('input');
+                    if (input) input.focus(); // Focus the input on key press
+                }
+            });
+
+            // Load data from localStorage
+            function loadFromLocalStorage() {
+                const savedData = localStorage.getItem('backflowReports');
+                if (savedData) {
+                    const parsedData = JSON.parse(savedData);
+                    let spreadsheetData = parsedData.spreadsheet || [];
+                    if (spreadsheetData.length > 20) spreadsheetData = spreadsheetData.slice(0, 20);
+                    else if (spreadsheetData.length < 20) spreadsheetData = spreadsheetData.concat(Array(20 - spreadsheetData.length).fill().map(() => Array(5).fill('')));
+                    hot.loadData(spreadsheetData);
+                    dateInput.value = parsedData.date || '';
+                }
+                hot.render();
+                console.log('Rows loaded:', hot.countRows());
+            }
+
+            // Save data to localStorage
+            function saveToLocalStorage() {
+                const data = {
+                    spreadsheet: hot.getData(),
+                    date: dateInput.value
+                };
+                localStorage.setItem('backflowReports', JSON.stringify(data));
+            }
+
+            // Load initial data
+            loadFromLocalStorage();
+
+            // Save on every change
+            hot.addHook('afterChange', saveToLocalStorage);
+            dateInput.addEventListener('change', saveToLocalStorage);
+
+            // Export to CSV with custom filename
+            document.getElementById('exportButton').addEventListener('click', () => {
+                const defaultName = 'Backflow_Reports_' + (dateInput.value || 'NoDate');
+                const customName = prompt('Enter file name for CSV export:', defaultName);
+                if (customName) {
+                    const exportPlugin = hot.getPlugin('exportFile');
+                    exportPlugin.downloadFile('csv', { filename: customName });
+                }
+            });
+
+            // Print functionality
+            document.getElementById('printButton').addEventListener('click', () => {
+                const printTable = document.createElement('table');
+                printTable.id = 'printTable';
+                const thead = document.createElement('thead');
+                const tbody = document.createElement('tbody');
+                const headers = ['PSI', 'CV #1', 'CV #2', 'RV Opening', 'Notes'];
+
+                const headerRow = document.createElement('tr');
+                headers.forEach(header => {
+                    const th = document.createElement('th');
+                    th.textContent = header;
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+
+                const data = hot.getData();
+                data.forEach(rowData => {
+                    const tr = document.createElement('tr');
+                    rowData.forEach(cell => {
+                        const td = document.createElement('td');
+                        td.textContent = cell || '';
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                });
+
+                printTable.appendChild(thead);
+                printTable.appendChild(tbody);
+                document.body.appendChild(printTable);
+
+                const originalTitle = document.getElementById('title').textContent;
+                const dateValue = dateInput.value || 'No Date';
+                document.getElementById('title').textContent = `Backflow Reports - ${dateValue}`;
+
+                window.print();
+
+                document.getElementById('title').textContent = originalTitle;
+                document.body.removeChild(printTable);
+            });
+
+            // Delete data with confirmation
+            const deleteButton = document.getElementById('deleteButton');
+            const confirmationPopup = document.getElementById('confirmationPopup');
+            const confirmYes = document.getElementById('confirmYes');
+            const confirmNo = document.getElementById('confirmNo');
+
+            deleteButton.addEventListener('click', () => {
+                confirmationPopup.style.display = 'block';
+            });
+
+            confirmYes.addEventListener('click', () => {
+                const emptyData = {
+                    spreadsheet: Array(20).fill().map(() => Array(5).fill('')),
+                    date: ''
+                };
+                hot.loadData(emptyData.spreadsheet);
+                dateInput.value = '';
+                localStorage.setItem('backflowReports', JSON.stringify(emptyData));
+                confirmationPopup.style.display = 'none';
+                hot.render();
+            });
+
+            confirmNo.addEventListener('click', () => {
+                confirmationPopup.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>
