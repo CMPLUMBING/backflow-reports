@@ -187,12 +187,12 @@
             color: #000000 !important;
         }
         .handsontable .htCore .htEditor_active .htEditor_input {
-            color: #000000 !important;
-            background-color: #ffffff !important;
+            color: #ffffff !important; /* White while typing */
+            background-color: #2a2a2a !important; /* Matches cell background */
         }
         .handsontable td[style*="rgba(255, 0, 0, 0.2)"],
         .handsontable td[style*="rgba(0, 255, 0, 0.2)"] {
-            color: #000000 !important;
+            color: #000000 !important; /* Black in highlighted rows */
         }
         @media print {
             body {
@@ -312,8 +312,8 @@
                     input.setAttribute('inputmode', 'decimal');
                     input.setAttribute('pattern', '[0-9]*');
                     input.setAttribute('type', 'number');
-                    input.style.background = '#ffffff';
-                    input.style.color = '#000000';
+                    input.style.background = '#2a2a2a'; // Matches cell background
+                    input.style.color = '#ffffff'; // White while typing
                     input.style.border = 'none';
                 }
             }
@@ -325,8 +325,8 @@
                     const input = this.TEXTAREA;
                     input.setAttribute('inputmode', 'text');
                     input.setAttribute('type', 'text');
-                    input.style.background = '#ffffff';
-                    input.style.color = '#000000';
+                    input.style.background = '#2a2a2a';
+                    input.style.color = '#ffffff';
                     input.style.border = 'none';
                 }
             }
@@ -339,8 +339,8 @@
             const hot = new Handsontable(container, {
                 data: Array(20).fill().map(() => Array(5).fill('')),
                 rowHeaders: true,
-                colHeaders: ['PSI (PSI)', 'CV #1 (PSID)', 'CV #2 (PSID)', 'RV Opening (PSID)', 'Notes'],
-                colWidths: [120, 120, 120, 120, 200],
+                colHeaders: ['PSI (PSI)', 'CV #1 (PSID)', 'CV #2 (PSID)', 'RV/Inlet Opening (PSID)', 'Notes'],
+                colWidths: [120, 120, 120, 150, 200], // Adjusted for longer RV/Inlet header
                 rowHeights: 40,
                 minRows: 20,
                 maxRows: 20,
@@ -394,7 +394,7 @@
             hot.addHook('afterChange', (changes, source) => {
                 if (changes && source === 'edit') {
                     changes.forEach(([row, col, oldValue, newValue]) => {
-                        if (col >= 1 && col <= 3 && newValue !== null && newValue !== '') { // CV #1, CV #2, RV Opening
+                        if (col >= 1 && col <= 3 && newValue !== null && newValue !== '') { // CV #1, CV #2, RV/Inlet Opening
                             let numStr = newValue.toString().replace('.', '');
                             if (numStr.length > 1) {
                                 numStr = numStr.slice(0, -1) + '.' + numStr.slice(-1);
@@ -455,7 +455,7 @@
                 printTable.id = 'printTable';
                 const thead = document.createElement('thead');
                 const tbody = document.createElement('tbody');
-                const headers = ['PSI (PSI)', 'CV #1 (PSID)', 'CV #2 (PSID)', 'RV Opening (PSID)', 'Notes'];
+                const headers = ['PSI (PSI)', 'CV #1 (PSID)', 'CV #2 (PSID)', 'RV/Inlet Opening (PSID)', 'Notes'];
 
                 const headerRow = document.createElement('tr');
                 headers.forEach(header => {
