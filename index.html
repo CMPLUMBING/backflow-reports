@@ -190,8 +190,7 @@
             color: #000000 !important;
             background-color: #ffffff !important;
         }
-        /* Ensure text is black in highlighted rows */
-        .handsontable td[style*="rgba(255, 0, 0, 0.2)"], 
+        .handsontable td[style*="rgba(255, 0, 0, 0.2)"],
         .handsontable td[style*="rgba(0, 255, 0, 0.2)"] {
             color: #000000 !important;
         }
@@ -305,7 +304,7 @@
             const dateInput = document.getElementById('dateInput');
             console.log('Container:', container, 'DateInput:', dateInput);
 
-            // Custom Numeric Editor with auto-decimal for PSID columns
+            // Custom Numeric Editor
             class CustomNumericEditor extends Handsontable.editors.NumericEditor {
                 prepare(row, col, prop, td, value, cellProperties) {
                     super.prepare(row, col, prop, td, value, cellProperties);
@@ -317,20 +316,9 @@
                     input.style.color = '#000000';
                     input.style.border = 'none';
                 }
-                setValue(value) {
-                    if (value !== null && value !== '' && (this.col === 1 || this.col === 2 || this.col === 3)) { // CV #1, CV #2, RV Opening
-                        let numStr = value.toString().replace('.', ''); // Remove existing decimal
-                        if (numStr.length > 1) {
-                            numStr = numStr.slice(0, -1) + '.' + numStr.slice(-1); // Insert decimal before last digit
-                        }
-                        this.TEXTAREA.value = numStr;
-                    } else {
-                        this.TEXTAREA.value = value || '';
-                    }
-                }
             }
 
-            // Custom Text Editor for iOS
+            // Custom Text Editor
             class CustomTextEditor extends Handsontable.editors.TextEditor {
                 prepare(row, col, prop, td, value, cellProperties) {
                     super.prepare(row, col, prop, td, value, cellProperties);
@@ -393,7 +381,7 @@
                         }
                     } catch (error) {
                         console.error('Error in beforeRenderer:', error);
-                        TD.style.backgroundColor = '#2a2a2a'; // Fallback
+                        TD.style.backgroundColor = '#2a2a2a';
                     }
                 },
                 afterScrollVertically: function() {
@@ -401,6 +389,22 @@
                 }
             });
             console.log('Handsontable initialized');
+
+            // Auto-decimal logic on cell change
+            hot.addHook('afterChange', (changes, source) => {
+                if (changes && source === 'edit') {
+                    changes.forEach(([row, col, oldValue, newValue]) => {
+                        if (col >= 1 && col <= 3 && newValue !== null && newValue !== '') { // CV #1, CV #2, RV Opening
+                            let numStr = newValue.toString().replace('.', '');
+                            if (numStr.length > 1) {
+                                numStr = numStr.slice(0, -1) + '.' + numStr.slice(-1);
+                                hot.setDataAtCell(row, col, numStr, 'autoDecimal');
+                            }
+                        }
+                    });
+                }
+                saveToLocalStorage();
+            });
 
             // Load data from localStorage
             function loadFromLocalStorage() {
@@ -430,8 +434,7 @@
             // Load initial data
             loadFromLocalStorage();
 
-            // Save on every change
-            hot.addHook('afterChange', saveToLocalStorage);
+            // Save on date change
             dateInput.addEventListener('change', saveToLocalStorage);
 
             // Export to CSV with custom filename
