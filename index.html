@@ -215,6 +215,19 @@
             const container = document.getElementById('spreadsheet');
             const dateInput = document.getElementById('dateInput');
 
+            // Custom renderer to apply inputmode attributes
+            function customInputRenderer(instance, td, row, col, prop, value, cellProperties) {
+                Handsontable.renderers.TextRenderer.apply(this, arguments);
+                if (col < 4) { // Numeric columns: PSI, CV #1, CV #2, RV Opening
+                    td.innerHTML = `<input type="number" inputmode="decimal" pattern="[0-9]*" value="${value || ''}" style="width: 100%; background: #2a2a2a; color: #ffffff; border: none;">`;
+                } else { // Notes column
+                    td.innerHTML = `<input type="text" inputmode="text" value="${value || ''}" style="width: 100%; background: #2a2a2a; color: #ffffff; border: none;">`;
+                }
+            }
+
+            // Register the custom renderer
+            Handsontable.renderers.registerRenderer('customInputRenderer', customInputRenderer);
+
             // Initialize Handsontable
             const hot = new Handsontable(container, {
                 data: Array(20).fill().map(() => Array(5).fill('')),
@@ -229,149 +242,24 @@
                 licenseKey: 'non-commercial-and-evaluation',
                 stretchH: 'all',
                 cells: function(row, col, prop) {
-                    if (col < 4) { // PSI, CV #1, CV #2, RV Opening (numeric columns)
-                        return {
-                            type: 'numeric',
-                            editor: 'mobile', // Use mobile editor for better iOS compatibility
-                            editorOptions: {
-                                inputProps: {
-                                    inputmode: 'decimal', // Forces numeric keyboard with decimal support
-                                    pattern: '[0-9]*',    // Restricts to numbers (iOS compatibility)
-                                    type: 'number'        // HTML5 type to reinforce numeric input
-                                }
-                            }
-                        };
-                    } else { // Notes column (col 4)
-                        return {
-                            type: 'text',
-                            editor: 'mobile', // Use mobile editor
-                            editorOptions: {
-                                inputProps: {
-                                    inputmode: 'text' // Forces standard alphabetical keyboard
-                                }
-                            }
-                        };
-                    }
+                    return {
+                        renderer: 'customInputRenderer', // Use custom renderer
+                        type: col < 4 ? 'numeric' : 'text' // Set type for data handling
+                    };
                 },
                 afterScrollVertically: function() {
                     this.render();
-                }
-            });
-
-            // Load data from localStorage
-            function loadFromLocalStorage() {
-                const savedData = localStorage.getItem('backflowReports');
-                if (savedData) {
-                    const parsedData = JSON.parse(savedData);
-                    let spreadsheetData = parsedData.spreadsheet || [];
-                    if (spreadsheetData.length > 20) spreadsheetData = spreadsheetData.slice(0, 20);
-                    else if (spreadsheetData.length < 20) spreadsheetData = spreadsheetData.concat(Array(20 - spreadsheetData.length).fill().map(() => Array(5).fill('')));
-                    hot.loadData(spreadsheetData);
-                    dateInput.value = parsedData.date || '';
-                }
-                hot.render();
-                console.log('Rows loaded:', hot.countRows());
-            }
-
-            // Save data to localStorage
-            function saveToLocalStorage() {
-                const data = {
-                    spreadsheet: hot.getData(),
-                    date: dateInput.value
-                };
-                localStorage.setItem('backflowReports', JSON.stringify(data));
-            }
-
-            // Load initial data
-            loadFromLocalStorage();
-
-            // Save on every change
-            hot.addHook('afterChange', saveToLocalStorage);
-            dateInput.addEventListener('change', saveToLocalStorage);
-
-            // Export to CSV with custom filename
-            document.getElementById('exportButton').addEventListener('click', () => {
-                const defaultName = 'Backflow_Reports_' + (dateInput.value || 'NoDate');
-                const customName = prompt('Enter file name for CSV export:', defaultName);
-                if (customName) {
-                    const exportPlugin = hot.getPlugin('exportFile');
-                    exportPlugin.downloadFile('csv', { filename: customName });
-                }
-            });
-
-            // Print functionality
-            document.getElementById('printButton').addEventListener('click', () => {
-                // Create a temporary table for printing
-                const printTable = document.createElement('table');
-                printTable.id = 'printTable';
-                const thead = document.createElement('thead');
-                const tbody = document.createElement('tbody');
-                const headers = ['PSI', 'CV #1', 'CV #2', 'RV Opening', 'Notes'];
-
-                // Add headers
-                const headerRow = document.createElement('tr');
-                headers.forEach(header => {
-                    const th = document.createElement('th');
-                    th.textContent = header;
-                    headerRow.appendChild(th);
-                });
-                thead.appendChild(headerRow);
-
-                // Add data rows
-                const data = hot.getData();
-                data.forEach(rowData => {
-                    const tr = document.createElement('tr');
-                    rowData.forEach(cell => {
-                        const td = document.createElement('td');
-                        td.textContent = cell || '';
-                        tr.appendChild(td);
-                    });
-                    tbody.appendChild(tr);
-                });
-
-                printTable.appendChild(thead);
-                printTable.appendChild(tbody);
-                document.body.appendChild(printTable);
-
-                // Update title with date
-                const originalTitle = document.getElementById('title').textContent;
-                const dateValue = dateInput.value || 'No Date';
-                document.getElementById('title').textContent = `Backflow Reports - ${dateValue}`;
-
-                // Trigger print
-                window.print();
-
-                // Clean up
-                document.getElementById('title').textContent = originalTitle;
-                document.body.removeChild(printTable);
-            });
-
-            // Delete data with confirmation
-            const deleteButton = document.getElementById('deleteButton');
-            const confirmationPopup = document.getElementById('confirmationPopup');
-            const confirmYes = document.getElementById('confirmYes');
-            const confirmNo = document.getElementById('confirmNo');
-
-            deleteButton.addEventListener('click', () => {
-                confirmationPopup.style.display = 'block';
-            });
-
-            confirmYes.addEventListener('click', () => {
-                const emptyData = {
-                    spreadsheet: Array(20).fill().map(() => Array(5).fill('')),
-                    date: ''
-                };
-                hot.loadData(emptyData.spreadsheet);
-                dateInput.value = '';
-                localStorage.setItem('backflowReports', JSON.stringify(emptyData));
-                confirmationPopup.style.display = 'none';
-                hot.render();
-            });
-
-            confirmNo.addEventListener('click', () => {
-                confirmationPopup.style.display = 'none';
-            });
-        });
-    </script>
-</body>
-</html>
+                },
+                afterChange: function(changes, source) {
+                    if (source === 'edit') {
+                        changes.forEach(([row, prop, oldValue, newValue]) => {
+                            const col = parseInt(prop);
+                            const cell = this.getCell(row, col);
+                            const input = cell.querySelector('input');
+                            if (input) input.value = newValue; // Sync input value with Handsontable data
+                        });
+                    }
+                },
+                beforeKeyDown: function(event) {
+                    const selected = this.getSelectedLast();
+                    if (
