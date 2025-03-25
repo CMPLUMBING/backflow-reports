@@ -38,6 +38,19 @@
             margin: 0;
             flex-grow: 0;
         }
+        #emojiCorner {
+            display: block;
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            text-align: center;
+            font-size: 24px;
+            color: #ffffff;
+            background-color: #ff0000;
+            border-radius: 8px;
+            margin: 0 auto 10px auto;
+            z-index: 1000;
+        }
         #dateContactContainer {
             display: flex;
             justify-content: space-between;
@@ -67,17 +80,6 @@
         }
         #contactButton:hover {
             background-color: #3a7dbb;
-        }
-        #emojiCorner {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            font-size: 24px;
-            color: #ffffff;
-            background-color: #ff0000; /* Red to make it scream */
-            padding: 5px;
-            border-radius: 4px;
-            z-index: 1000;
         }
         #spreadsheet {
             height: 700px;
@@ -177,7 +179,7 @@
             text-decoration: none;
         }
         #printTable {
-            display: none; /* Hidden by default, shown on print */
+            display: none;
         }
         .handsontable {
             color: #ffffff;
@@ -259,6 +261,9 @@
                 font-size: 24px;
                 font-weight: bold;
             }
+            #emojiCorner {
+                display: none !important;
+            }
             #dateContactContainer {
                 display: block;
                 text-align: center;
@@ -274,8 +279,8 @@
                 font-size: 16px;
                 text-align: center;
             }
-            #contactButton, #emojiCorner {
-                display: none !important;
+            #contactButton {
+                display: none;
             }
             #spreadsheet {
                 display: none !important;
@@ -325,12 +330,12 @@
 </head>
 <body>
     <div id="headerContainer">
-        <div id="emojiCorner"></div>
         <div id="logoTitleContainer">
             <img id="logoLeft" src="./logo-left.png" alt="Left Logo">
             <div id="title">Backflow Reports</div>
             <img id="logoRight" src="./logo-right.png" alt="Right Logo">
         </div>
+        <div id="emojiCorner"></div>
         <div id="dateContactContainer">
             <div id="dateContainer">
                 <input type="date" id="dateInput" value="">
@@ -386,8 +391,8 @@
                 }
             }
 
-            // Set emoji with fallback
-            emojiCorner.textContent = `E:${getDayEmoji()}`;
+            // Set emoji without "E:"
+            emojiCorner.textContent = getDayEmoji();
             console.log('Emoji set initially:', emojiCorner.textContent);
 
             // Custom Numeric Editor
@@ -447,7 +452,7 @@
             // Initialize Handsontable
             const hot = new Handsontable(container, {
                 data: Array(20).fill().map(() => Array(6).fill('')),
-                rowHeaders: true,
+                rowHeaders: true;
                 colHeaders: ['PSI (PSI)', 'CV #1 (PSID)', 'CV #2 (PSID)', 'VB', 'RV/Air Inlet (PSID)', 'Notes'],
                 colWidths: [120, 120, 120, 50, 150, 200],
                 rowHeights: 30,
@@ -498,7 +503,7 @@
                     }
                 },
                 afterRender: function(isForced) {
-                    emojiCorner.textContent = `E:${getDayEmoji()}`;
+                    emojiCorner.textContent = getDayEmoji();
                     console.log('Emoji updated on render:', emojiCorner.textContent);
                 }
             });
@@ -575,11 +580,9 @@
                 const tbody = printTable.querySelector('tbody');
                 const headers = ['PSI (PSI)', 'CV #1 (PSID)', 'CV #2 (PSID)', 'VB', 'RV/Air Inlet (PSID)', 'Notes'];
 
-                // Clear previous content
                 thead.innerHTML = '';
                 tbody.innerHTML = '';
 
-                // Build header row
                 const headerRow = document.createElement('tr');
                 headers.forEach(header => {
                     const th = document.createElement('th');
@@ -588,7 +591,6 @@
                 });
                 thead.appendChild(headerRow);
 
-                // Build data rows
                 const data = hot.getData();
                 console.log('Print data:', data);
                 data.forEach((rowData, rowIndex) => {
@@ -616,7 +618,7 @@
                     window.print();
                     console.log('Print triggered');
                     document.getElementById('title').textContent = originalTitle;
-                    printTable.style.display = 'none'; // Hide after print
+                    printTable.style.display = 'none';
                     console.log('Print table hidden');
                 }, 2000);
             });
