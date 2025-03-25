@@ -234,6 +234,7 @@
                 width: 100%;
                 max-width: 8.5in;
                 margin: 0 auto;
+                position: relative;
             }
             #logoTitleContainer {
                 display: flex;
@@ -270,15 +271,18 @@
                 display: none;
             }
             #spreadsheet {
-                display: none; /* Hide interactive grid */
+                display: none !important;
             }
             #printTable {
-                display: table !important; /* Ensure visibility */
+                display: table !important;
+                visibility: visible !important;
                 width: 90%;
                 max-width: 8in;
                 margin: 10px auto;
                 border-collapse: collapse;
                 font-size: 12px;
+                position: relative;
+                z-index: 1;
             }
             #printTable th, #printTable td {
                 border: 1px solid #ccc;
@@ -295,11 +299,19 @@
                 color: black;
             }
             #buttonContainer, #confirmationPopup, #contactPopup {
-                display: none;
+                display: none !important;
             }
             @page {
                 size: letter;
                 margin: 0.5in;
+            }
+            /* iOS-specific fix */
+            @media only screen and (max-device-width: 1024px) {
+                #printTable {
+                    -webkit-print-color-adjust: exact;
+                    color-adjust: exact;
+                    opacity: 1 !important;
+                }
             }
         }
     </style>
@@ -407,10 +419,20 @@
                 }
             }
 
-            // Register editors and renderer
+            // Custom Corner Renderer for Emoji
+            function cornerRenderer(instance, td, row, col, prop, value, cellProperties) {
+                td.textContent = getDayEmoji();
+                td.style.textAlign = 'center';
+                td.style.verticalAlign = 'middle';
+                td.style.fontSize = '20px';
+                return td;
+            }
+
+            // Register editors and renderers
             Handsontable.editors.registerEditor('customNumeric', CustomNumericEditor);
             Handsontable.editors.registerEditor('customText', CustomTextEditor);
             Handsontable.renderers.registerRenderer('customCheckbox', customCheckboxRenderer);
+            Handsontable.renderers.registerRenderer('cornerRenderer', cornerRenderer);
 
             // Initialize Handsontable
             const hot = new Handsontable(container, {
@@ -425,15 +447,6 @@
                 contextMenu: true,
                 licenseKey: 'non-commercial-and-evaluation',
                 stretchH: 'all',
-                cells: function(row, col, prop) {
-                    if (col === 3) {
-                        return { type: 'checkbox', renderer: 'customCheckbox' };
-                    } else if (col < 3 || col === 4) {
-                        return { type: 'numeric', editor: 'customNumeric' };
-                    } else {
-                        return { type: 'text', editor: 'customText' };
-                    }
-                },
                 beforeRenderer: function(TD, row, col, prop, value, cellProperties) {
                     try {
                         const data = hot.getData();
@@ -468,11 +481,9 @@
                 afterScrollVertically: function() {
                     this.render();
                 },
-                afterRender: function(isForced) {
-                    const corner = this.rootElement.querySelector('.htCore .htCornerHeader');
-                    if (corner) {
-                        corner.textContent = getDayEmoji();
-                        console.log('Emoji set:', corner.textContent);
+                afterRenderer: function(TD, row, col, prop, value, cellProperties) {
+                    if (row === -1 && col === -1) {
+                        cornerRenderer(this, TD, row, col, prop, value, cellProperties);
                     }
                 }
             });
@@ -551,7 +562,6 @@
                 const tbody = document.createElement('tbody');
                 const headers = ['PSI (PSI)', 'CV #1 (PSID)', 'CV #2 (PSID)', 'VB', 'RV/Air Inlet (PSID)', 'Notes'];
 
-                // Build header row
                 const headerRow = document.createElement('tr');
                 headers.forEach(header => {
                     const th = document.createElement('th');
@@ -560,7 +570,6 @@
                 });
                 thead.appendChild(headerRow);
 
-                // Build data rows
                 const data = hot.getData();
                 console.log('Print data:', data);
                 data.forEach((rowData, rowIndex) => {
@@ -586,12 +595,13 @@
                 const dateValue = dateInput.value || 'No Date';
                 document.getElementById('title').textContent = `Backflow Reports - ${dateValue}`;
 
-                // Slight delay to ensure rendering
                 setTimeout(() => {
                     window.print();
+                    console.log('Print triggered');
                     document.getElementById('title').textContent = originalTitle;
                     document.body.removeChild(printTable);
-                }, 100);
+                    console.log('Print table removed');
+                }, 500);
             });
 
             // Delete data with confirmation
