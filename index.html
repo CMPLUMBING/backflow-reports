@@ -166,6 +166,16 @@
         .handsontable .ht__highlight {
             background-color: #3a3a3a;
         }
+        /* Highlighted row header (number) */
+        .handsontable .ht__active_highlight {
+            background-color: #333333; /* Keep background same as other headers */
+            color: #00BFFF !important; /* Bright blue for row number */
+        }
+        /* Highlighted column header (e.g., PSI) */
+        .handsontable th.ht__highlight {
+            background-color: #333333; /* Keep background same as other headers */
+            color: #00BFFF !important; /* Bright blue for column header */
+        }
         @media print {
             body {
                 background-color: white;
