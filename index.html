@@ -22,7 +22,7 @@
         }
         #logoTitleContainer {
             display: flex;
-            justify-content: center; /* Center logos and title */
+            justify-content: center;
             align-items: center;
         }
         #logoLeft, #logoRight {
@@ -331,12 +331,12 @@
             Handsontable.editors.registerEditor('customNumeric', CustomNumericEditor);
             Handsontable.editors.registerEditor('customText', CustomTextEditor);
 
-            // Initialize Handsontable with pre-filled units in headers
+            // Initialize Handsontable
             const hot = new Handsontable(container, {
                 data: Array(20).fill().map(() => Array(5).fill('')),
                 rowHeaders: true,
                 colHeaders: ['PSI (PSI)', 'CV #1 (PSID)', 'CV #2 (PSID)', 'RV Opening (PSID)', 'Notes'],
-                colWidths: [120, 120, 120, 120, 200], // Adjusted for longer headers
+                colWidths: [120, 120, 120, 120, 200],
                 rowHeights: 40,
                 minRows: 20,
                 maxRows: 20,
@@ -352,37 +352,31 @@
                     }
                 },
                 beforeRenderer: function(TD, row, col, prop, value, cellProperties) {
-                    const data = hot.getData();
-                    const psi = data[row][0]; // PSI (col 0)
-                    const cv1 = parseFloat(data[row][1]); // CV #1 (col 1)
-                    const cv2 = parseFloat(data[row][2]); // CV #2 (col 2)
-                    const rv = data[row][3];  // RV Opening (col 3)
+                    try {
+                        const data = hot.getData();
+                        const psi = data[row][0];
+                        const cv1 = data[row][1] === '' || data[row][1] === null ? NaN : parseFloat(data[row][1]);
+                        const cv2 = data[row][2] === '' || data[row][2] === null ? NaN : parseFloat(data[row][2]);
+                        const rv = data[row][3];
 
-                    // Conditions
-                    const isFilled = psi !== '' && psi !== null && 
-                                    cv1 !== '' && cv1 !== null && !isNaN(cv1) && 
-                                    cv2 !== '' && cv2 !== null && !isNaN(cv2);
-                    const hasAnyValue = (psi !== '' && psi !== null) || 
-                                        (cv1 !== '' && cv1 !== null && !isNaN(cv1)) || 
-                                        (cv2 !== '' && cv2 !== null && !isNaN(cv2)) || 
-                                        (rv !== '' && rv !== null);
-                    const cvBelowThreshold = (cv1 < 1.0 && cv1 !== null && !isNaN(cv1)) || 
-                                            (cv2 < 1.0 && cv2 !== null && !isNaN(cv2));
-                    const isValid = isFilled && cv1 >= 1.0 && cv2 >= 1.0;
+                        const isFilled = psi !== '' && psi !== null && !isNaN(parseFloat(psi)) &&
+                                        !isNaN(cv1) && !isNaN(cv2);
+                        const hasAnyValue = (psi !== '' && psi !== null) || !isNaN(cv1) || !isNaN(cv2) || (rv !== '' && rv !== null);
+                        const cvBelowThreshold = (!isNaN(cv1) && cv1 < 1.0) || (!isNaN(cv2) && cv2 < 1.0);
+                        const isValid = isFilled && cv1 >= 1.0 && cv2 >= 1.0;
 
-                    // Reset background
-                    TD.style.backgroundColor = '#2a2a2a';
+                        TD.style.backgroundColor = '#2a2a2a';
+                        if (isValid) {
+                            TD.style.backgroundColor = 'rgba(0, 255, 0, 0.2)';
+                        } else if (hasAnyValue || (isFilled && cvBelowThreshold)) {
+                            TD.style.backgroundColor = 'rgba(255, 0, 0, 0.2)';
+                        }
 
-                    // Apply highlights
-                    if (isValid) {
-                        TD.style.backgroundColor = 'rgba(0, 255, 0, 0.2)'; // Green
-                    } else if (hasAnyValue || (isFilled && cvBelowThreshold)) {
-                        TD.style.backgroundColor = 'rgba(255, 0, 0, 0.2)'; // Red
-                    }
-
-                    // Debug logging
-                    if (row === 0 && col === 0) {
-                        console.log(`Row ${row}: PSI=${psi}, CV1=${cv1}, CV2=${cv2}, RV=${rv}, isFilled=${isFilled}, hasAnyValue=${hasAnyValue}, cvBelowThreshold=${cvBelowThreshold}, isValid=${isValid}`);
+                        if (row === 0 && col === 0) {
+                            console.log(`Row ${row}: PSI=${psi}, CV1=${cv1}, CV2=${cv2}, RV=${rv}, isFilled=${isFilled}, hasAnyValue=${hasAnyValue}, cvBelowThreshold=${cvBelowThreshold}, isValid=${isValid}`);
+                        }
+                    } catch (error) {
+                        console.error('Error in beforeRenderer:', error);
                     }
                 },
                 afterScrollVertically: function() {
