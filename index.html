@@ -190,6 +190,11 @@
             color: #000000 !important;
             background-color: #ffffff !important;
         }
+        /* Ensure text is black in highlighted rows */
+        .handsontable td[style*="rgba(255, 0, 0, 0.2)"], 
+        .handsontable td[style*="rgba(0, 255, 0, 0.2)"] {
+            color: #000000 !important;
+        }
         @media print {
             body {
                 background-color: white;
@@ -300,7 +305,7 @@
             const dateInput = document.getElementById('dateInput');
             console.log('Container:', container, 'DateInput:', dateInput);
 
-            // Custom Numeric Editor for iOS
+            // Custom Numeric Editor with auto-decimal for PSID columns
             class CustomNumericEditor extends Handsontable.editors.NumericEditor {
                 prepare(row, col, prop, td, value, cellProperties) {
                     super.prepare(row, col, prop, td, value, cellProperties);
@@ -311,6 +316,17 @@
                     input.style.background = '#ffffff';
                     input.style.color = '#000000';
                     input.style.border = 'none';
+                }
+                setValue(value) {
+                    if (value !== null && value !== '' && (this.col === 1 || this.col === 2 || this.col === 3)) { // CV #1, CV #2, RV Opening
+                        let numStr = value.toString().replace('.', ''); // Remove existing decimal
+                        if (numStr.length > 1) {
+                            numStr = numStr.slice(0, -1) + '.' + numStr.slice(-1); // Insert decimal before last digit
+                        }
+                        this.TEXTAREA.value = numStr;
+                    } else {
+                        this.TEXTAREA.value = value || '';
+                    }
                 }
             }
 
@@ -377,6 +393,7 @@
                         }
                     } catch (error) {
                         console.error('Error in beforeRenderer:', error);
+                        TD.style.backgroundColor = '#2a2a2a'; // Fallback
                     }
                 },
                 afterScrollVertically: function() {
