@@ -229,10 +229,29 @@
                 licenseKey: 'non-commercial-and-evaluation',
                 stretchH: 'all',
                 cells: function(row, col, prop) {
-                    return {
-                        readOnly: false,
-                        type: col < 4 ? 'numeric' : 'text'
-                    };
+                    if (col < 4) { // PSI, CV #1, CV #2, RV Opening (numeric columns)
+                        return {
+                            type: 'numeric',
+                            editor: 'mobile', // Use mobile editor for better iOS compatibility
+                            editorOptions: {
+                                inputProps: {
+                                    inputmode: 'decimal', // Forces numeric keyboard with decimal support
+                                    pattern: '[0-9]*',    // Restricts to numbers (iOS compatibility)
+                                    type: 'number'        // HTML5 type to reinforce numeric input
+                                }
+                            }
+                        };
+                    } else { // Notes column (col 4)
+                        return {
+                            type: 'text',
+                            editor: 'mobile', // Use mobile editor
+                            editorOptions: {
+                                inputProps: {
+                                    inputmode: 'text' // Forces standard alphabetical keyboard
+                                }
+                            }
+                        };
+                    }
                 },
                 afterScrollVertically: function() {
                     this.render();
