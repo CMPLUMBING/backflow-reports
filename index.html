@@ -200,13 +200,13 @@
             color: #ffffff !important; /* Default white for neutral cells */
             background-color: #2a2a2a !important;
         }
-        /* Ensure black text when editing highlighted cells */
-        .handsontable td[style*="rgba(255, 0, 0, 0.2)"] .htEditor_active .htEditor_input,
-        .handsontable td[style*="rgba(0, 255, 0, 0.2)"] .htEditor_active .htEditor_input {
+        /* Higher specificity for highlighted cells during editing */
+        .handsontable td[style*="background-color: rgba(255, 0, 0, 0.2)"] .htEditor_active .htEditor_input,
+        .handsontable td[style*="background-color: rgba(0, 255, 0, 0.2)"] .htEditor_active .htEditor_input {
             color: #000000 !important;
         }
-        .handsontable td[style*="rgba(255, 0, 0, 0.2)"],
-        .handsontable td[style*="rgba(0, 255, 0, 0.2)"] {
+        .handsontable td[style*="background-color: rgba(255, 0, 0, 0.2)"],
+        .handsontable td[style*="background-color: rgba(0, 255, 0, 0.2)"] {
             color: #000000 !important; /* Black for static text in highlighted cells */
         }
         .handsontable .htCore .htCornerHeader {
@@ -216,9 +216,14 @@
             text-align: center;
             vertical-align: middle;
         }
+        .handsontable .htCheckboxRendererLabel {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%; /* Full cell height */
+        }
         .handsontable .htCheckboxRendererInput {
-            display: block;
-            margin: 0 auto;
+            margin: 0; /* Remove default margin for precise centering */
         }
         @media print {
             body {
@@ -370,8 +375,12 @@
                     input.setAttribute('pattern', '[0-9]*');
                     input.setAttribute('type', 'number');
                     input.style.background = '#2a2a2a';
-                    input.style.color = '#ffffff'; // Default for neutral cells
+                    input.style.color = '#ffffff'; // Default for neutral
                     input.style.border = 'none';
+                    // Dynamically adjust color based on cell background
+                    if (td.style.backgroundColor === 'rgba(255, 0, 0, 0.2)' || td.style.backgroundColor === 'rgba(0, 255, 0, 0.2)') {
+                        input.style.color = '#000000';
+                    }
                 }
             }
 
@@ -383,8 +392,12 @@
                     input.setAttribute('inputmode', 'text');
                     input.setAttribute('type', 'text');
                     input.style.background = '#2a2a2a';
-                    input.style.color = '#ffffff'; // Default for neutral cells
+                    input.style.color = '#ffffff'; // Default for neutral
                     input.style.border = 'none';
+                    // Dynamically adjust color based on cell background
+                    if (td.style.backgroundColor === 'rgba(255, 0, 0, 0.2)' || td.style.backgroundColor === 'rgba(0, 255, 0, 0.2)') {
+                        input.style.color = '#000000';
+                    }
                 }
             }
 
