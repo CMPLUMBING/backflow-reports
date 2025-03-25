@@ -144,6 +144,12 @@
         #contactPopup #textButton:hover {
             background-color: #555555;
         }
+        #contactPopup #cancelButton {
+            background-color: #666666;
+        }
+        #contactPopup #cancelButton:hover {
+            background-color: #888888;
+        }
         .handsontable {
             color: #ffffff;
             background-color: #2a2a2a;
@@ -243,6 +249,7 @@
         <p>Contact Office: (509)-679-3264</p>
         <button id="callButton">Call</button>
         <button id="textButton">Text</button>
+        <button id="cancelButton">Cancel</button>
     </div>
     <script>
         console.log('Script started');
@@ -253,7 +260,38 @@
             const dateInput = document.getElementById('dateInput');
             console.log('Container:', container, 'DateInput:', dateInput);
 
-            // Initialize Handsontable with default editors
+            // Custom Numeric Editor for iOS
+            class CustomNumericEditor extends Handsontable.editors.NumericEditor {
+                prepare(row, col, prop, td, value, cellProperties) {
+                    super.prepare(row, col, prop, td, value, cellProperties);
+                    const input = this.TEXTAREA;
+                    input.setAttribute('inputmode', 'decimal');
+                    input.setAttribute('pattern', '[0-9]*');
+                    input.setAttribute('type', 'number');
+                    input.style.background = '#2a2a2a';
+                    input.style.color = '#ffffff';
+                    input.style.border = 'none';
+                }
+            }
+
+            // Custom Text Editor for iOS
+            class CustomTextEditor extends Handsontable.editors.TextEditor {
+                prepare(row, col, prop, td, value, cellProperties) {
+                    super.prepare(row, col, prop, td, value, cellProperties);
+                    const input = this.TEXTAREA;
+                    input.setAttribute('inputmode', 'text');
+                    input.setAttribute('type', 'text');
+                    input.style.background = '#2a2a2a';
+                    input.style.color = '#ffffff';
+                    input.style.border = 'none';
+                }
+            }
+
+            // Register the custom editors
+            Handsontable.editors.registerEditor('customNumeric', CustomNumericEditor);
+            Handsontable.editors.registerEditor('customText', CustomTextEditor);
+
+            // Initialize Handsontable
             const hot = new Handsontable(container, {
                 data: Array(20).fill().map(() => Array(5).fill('')),
                 rowHeaders: true,
@@ -267,9 +305,17 @@
                 licenseKey: 'non-commercial-and-evaluation',
                 stretchH: 'all',
                 cells: function(row, col, prop) {
-                    return {
-                        type: col < 4 ? 'numeric' : 'text'
-                    };
+                    if (col < 4) { // PSI, CV #1, CV #2, RV Opening
+                        return {
+                            type: 'numeric',
+                            editor: 'customNumeric'
+                        };
+                    } else { // Notes
+                        return {
+                            type: 'text',
+                            editor: 'customText'
+                        };
+                    }
                 },
                 afterScrollVertically: function() {
                     this.render();
@@ -396,6 +442,7 @@
             const contactPopup = document.getElementById('contactPopup');
             const callButton = document.getElementById('callButton');
             const textButton = document.getElementById('textButton');
+            const cancelButton = document.getElementById('cancelButton');
 
             contactButton.addEventListener('click', () => {
                 console.log('Contact button clicked');
@@ -411,6 +458,11 @@
             textButton.addEventListener('click', () => {
                 console.log('Text button clicked');
                 window.location.href = 'sms:+15096793264';
+                contactPopup.style.display = 'none';
+            });
+
+            cancelButton.addEventListener('click', () => {
+                console.log('Cancel button clicked');
                 contactPopup.style.display = 'none';
             });
 
