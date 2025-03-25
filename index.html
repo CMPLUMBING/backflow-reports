@@ -177,7 +177,7 @@
         .handsontable td {
             background-color: #2a2a2a;
             color: #ffffff;
-            border: 1px solid #444444; /* Consistent borders */
+            border: 1px solid #444444;
         }
         .handsontable .ht__highlight {
             background-color: #3a3a3a;
@@ -215,7 +215,6 @@
             text-align: center;
             vertical-align: middle;
         }
-        /* Checkbox centering */
         .handsontable .htCore tbody td:nth-child(4) {
             position: relative;
             padding: 0;
@@ -270,11 +269,11 @@
             #contactButton {
                 display: none;
             }
-            #spreadsheet, #printTable {
-                background-color: white;
-                height: auto;
+            #spreadsheet {
+                display: none; /* Hide interactive grid */
             }
             #printTable {
+                display: table !important; /* Ensure visibility */
                 width: 90%;
                 max-width: 8in;
                 margin: 10px auto;
@@ -295,7 +294,7 @@
                 background-color: white;
                 color: black;
             }
-            #spreadsheet, #buttonContainer, #confirmationPopup, #contactPopup {
+            #buttonContainer, #confirmationPopup, #contactPopup {
                 display: none;
             }
             @page {
@@ -394,7 +393,7 @@
                 }
             }
 
-            // Custom Checkbox Renderer for centering
+            // Custom Checkbox Renderer
             function customCheckboxRenderer(instance, td, row, col, prop, value, cellProperties) {
                 Handsontable.renderers.CheckboxRenderer.apply(this, arguments);
                 td.style.position = 'relative';
@@ -418,7 +417,7 @@
                 data: Array(20).fill().map(() => Array(6).fill('')),
                 rowHeaders: true,
                 colHeaders: ['PSI (PSI)', 'CV #1 (PSID)', 'CV #2 (PSID)', 'VB', 'RV/Air Inlet (PSID)', 'Notes'],
-                colWidths: [120, 120, 120, 50, 150, 200], // Shrunk VB to 50px
+                colWidths: [120, 120, 120, 50, 150, 200],
                 rowHeights: 30,
                 minRows: 20,
                 maxRows: 20,
@@ -461,10 +460,6 @@
                         } else if (hasAnyValue || (isFilledNormal && cvBelowThreshold)) {
                             TD.style.backgroundColor = 'rgba(255, 0, 0, 0.2)';
                         }
-
-                        if (row === 0 && col === 0) {
-                            console.log(`Row ${row}: PSI=${psi}, CV1=${cv1}, CV2=${cv2}, VB=${vb}, RV=${rv}, hasAnyValue=${hasAnyValue}, isFilledNormal=${isFilledNormal}, cvBelowThreshold=${cvBelowThreshold}, isValidNormal=${isValidNormal}, isFilledVb=${isFilledVb}, cv2InvalidWithVb=${cv2InvalidWithVb}`);
-                        }
                     } catch (error) {
                         console.error('Error in beforeRenderer:', error);
                         TD.style.backgroundColor = '#2a2a2a';
@@ -473,11 +468,11 @@
                 afterScrollVertically: function() {
                     this.render();
                 },
-                afterInit: function() {
-                    // Set emoji in top-left corner
+                afterRender: function(isForced) {
                     const corner = this.rootElement.querySelector('.htCore .htCornerHeader');
                     if (corner) {
                         corner.textContent = getDayEmoji();
+                        console.log('Emoji set:', corner.textContent);
                     }
                 }
             });
@@ -556,6 +551,7 @@
                 const tbody = document.createElement('tbody');
                 const headers = ['PSI (PSI)', 'CV #1 (PSID)', 'CV #2 (PSID)', 'VB', 'RV/Air Inlet (PSID)', 'Notes'];
 
+                // Build header row
                 const headerRow = document.createElement('tr');
                 headers.forEach(header => {
                     const th = document.createElement('th');
@@ -564,8 +560,10 @@
                 });
                 thead.appendChild(headerRow);
 
+                // Build data rows
                 const data = hot.getData();
-                data.forEach(rowData => {
+                console.log('Print data:', data);
+                data.forEach((rowData, rowIndex) => {
                     const tr = document.createElement('tr');
                     rowData.forEach((cell, index) => {
                         const td = document.createElement('td');
@@ -582,15 +580,18 @@
                 printTable.appendChild(thead);
                 printTable.appendChild(tbody);
                 document.body.appendChild(printTable);
+                console.log('Print table appended:', printTable.outerHTML);
 
                 const originalTitle = document.getElementById('title').textContent;
                 const dateValue = dateInput.value || 'No Date';
                 document.getElementById('title').textContent = `Backflow Reports - ${dateValue}`;
 
-                window.print();
-
-                document.getElementById('title').textContent = originalTitle;
-                document.body.removeChild(printTable);
+                // Slight delay to ensure rendering
+                setTimeout(() => {
+                    window.print();
+                    document.getElementById('title').textContent = originalTitle;
+                    document.body.removeChild(printTable);
+                }, 100);
             });
 
             // Delete data with confirmation
