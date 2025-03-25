@@ -24,8 +24,8 @@
             position: relative;
         }
         #logoLeft, #logoRight {
-            width: 50px;
-            height: 50px;
+            width: 100px; /* Doubled from 50px */
+            height: 100px; /* Doubled from 50px */
             margin: 0 20px;
         }
         #title {
@@ -188,8 +188,8 @@
                 border-bottom: 2px solid black;
             }
             #logoLeft, #logoRight {
-                width: 60px;
-                height: 60px;
+                width: 120px; /* Doubled from 60px */
+                height: 120px; /* Doubled from 60px */
             }
             #title {
                 color: black;
@@ -306,7 +306,7 @@
             // Initialize Handsontable
             const hot = new Handsontable(container, {
                 data: Array(20).fill().map(() => Array(5).fill('')),
-                rowHeaders: true;
+                rowHeaders: true,
                 colHeaders: ['PSI', 'CV #1', 'CV #2', 'RV Opening', 'Notes'],
                 colWidths: [100, 100, 100, 100, 200],
                 rowHeights: 40,
@@ -452,7 +452,7 @@
             // Contact Office functionality
             const contactButton = document.getElementById('contactButton');
             const contactPopup = document.getElementById('contactPopup');
-            const callButton = document.getElementBy rispondId('callButton');
+            const callButton = document.getElementById('callButton');
             const textButton = document.getElementById('textButton');
             const cancelButton = document.getElementById('cancelButton');
 
