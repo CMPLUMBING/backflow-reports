@@ -26,8 +26,8 @@
             align-items: center;
         }
         #logoLeft, #logoRight {
-            width: 100px; /* Doubled from 50px */
-            height: 100px; /* Doubled from 50px */
+            width: 100px;
+            height: 100px;
             margin: 0 20px;
         }
         #title {
@@ -36,16 +36,16 @@
             font-weight: bold;
             color: #ffffff;
             margin: 0;
-            flex-grow: 0; /* No need to grow */
+            flex-grow: 0;
         }
         #dateContactContainer {
             display: flex;
-            justify-content: space-between; /* Date on left, Contact on right */
+            justify-content: space-between;
             align-items: center;
-            margin-top: 5px; /* Reduced from 10px to bring it closer */
+            margin-top: 5px;
         }
         #dateContainer {
-            flex-grow: 0; /* Keep date input from stretching */
+            flex-grow: 0;
         }
         #dateInput {
             padding: 8px;
@@ -97,7 +97,7 @@
         }
         #printButton {
             background-color: #2a5d88;
-            padding: 20px 40px; /* Matches other buttons */
+            padding: 20px 40px;
         }
         #printButton:hover {
             background-color: #3a7dbb;
@@ -162,44 +162,33 @@
         }
         .handsontable th {
             background-color: #333333;
-            color: #ffffff; /* Default column headers (PSI, CV #1, etc.) */
+            color: #ffffff;
         }
         .handsontable td {
             background-color: #2a2a2a;
-            color: #ffffff; /* Default cell text */
+            color: #ffffff;
             border-color: #444444;
         }
         .handsontable .ht__highlight {
-            background-color: #3a3a3a; /* Highlighted cell background */
+            background-color: #3a3a3a;
         }
-        /* Highlighted row header (number) */
         .handsontable .ht__active_highlight {
             background-color: #333333;
-            color: #000000 !important; /* Black for highlighted row number */
+            color: #000000 !important;
             font-weight: bold !important;
         }
-        /* Highlighted column header (e.g., PSI) */
         .handsontable th.ht__highlight {
             background-color: #333333;
-            color: #000000 !important; /* Black for highlighted column header */
+            color: #000000 !important;
             font-weight: bold !important;
         }
-        /* Ensure headers stay black during editing */
         .handsontable .ht__active_highlight.ht__highlight,
         .handsontable th.ht__active_highlight.ht__highlight {
-            color: #000000 !important; /* Override any active state */
+            color: #000000 !important;
         }
-        /* Editor input text during typing */
         .handsontable .htCore .htEditor_active .htEditor_input {
-            color: #000000 !important; /* Black text while typing */
-            background-color: #ffffff !important; /* White background for contrast */
-        }
-        /* Row highlight styles */
-        .handsontable .row-red td {
-            background-color: rgba(255, 0, 0, 0.2) !important; /* Transparent red */
-        }
-        .handsontable .row-green td {
-            background-color: rgba(0, 255, 0, 0.2) !important; /* Transparent green */
+            color: #000000 !important;
+            background-color: #ffffff !important;
         }
         @media print {
             body {
@@ -216,8 +205,8 @@
                 align-items: center;
             }
             #logoLeft, #logoRight {
-                width: 120px; /* Doubled from 60px */
-                height: 120px; /* Doubled from 60px */
+                width: 120px;
+                height: 120px;
             }
             #title {
                 color: black;
@@ -226,7 +215,7 @@
             #dateContactContainer {
                 display: flex;
                 justify-content: space-between;
-                margin-top: 5px; /* Adjusted for print */
+                margin-top: 5px;
             }
             #dateContainer {
                 flex-grow: 0;
@@ -238,7 +227,7 @@
                 font-size: 18px;
             }
             #contactButton {
-                display: none; /* Hide Contact button when printing */
+                display: none;
             }
             #spreadsheet, #printTable {
                 background-color: white;
@@ -319,8 +308,8 @@
                     input.setAttribute('inputmode', 'decimal');
                     input.setAttribute('pattern', '[0-9]*');
                     input.setAttribute('type', 'number');
-                    input.style.background = '#ffffff'; /* White background while typing */
-                    input.style.color = '#000000'; /* Black text while typing */
+                    input.style.background = '#ffffff';
+                    input.style.color = '#000000';
                     input.style.border = 'none';
                 }
             }
@@ -332,8 +321,8 @@
                     const input = this.TEXTAREA;
                     input.setAttribute('inputmode', 'text');
                     input.setAttribute('type', 'text');
-                    input.style.background = '#ffffff'; /* White background while typing */
-                    input.style.color = '#000000'; /* Black text while typing */
+                    input.style.background = '#ffffff';
+                    input.style.color = '#000000';
                     input.style.border = 'none';
                 }
             }
@@ -342,12 +331,12 @@
             Handsontable.editors.registerEditor('customNumeric', CustomNumericEditor);
             Handsontable.editors.registerEditor('customText', CustomTextEditor);
 
-            // Initialize Handsontable
+            // Initialize Handsontable with pre-filled units in headers
             const hot = new Handsontable(container, {
                 data: Array(20).fill().map(() => Array(5).fill('')),
                 rowHeaders: true,
-                colHeaders: ['PSI', 'CV #1', 'CV #2', 'RV Opening', 'Notes'],
-                colWidths: [100, 100, 100, 100, 200],
+                colHeaders: ['PSI (PSI)', 'CV #1 (PSID)', 'CV #2 (PSID)', 'RV Opening (PSID)', 'Notes'],
+                colWidths: [120, 120, 120, 120, 200], // Adjusted for longer headers
                 rowHeights: 40,
                 minRows: 20,
                 maxRows: 20,
@@ -356,16 +345,44 @@
                 licenseKey: 'non-commercial-and-evaluation',
                 stretchH: 'all',
                 cells: function(row, col, prop) {
-                    if (col < 4) { // PSI, CV #1, CV #2, RV Opening
-                        return {
-                            type: 'numeric',
-                            editor: 'customNumeric'
-                        };
-                    } else { // Notes
-                        return {
-                            type: 'text',
-                            editor: 'customText'
-                        };
+                    if (col < 4) {
+                        return { type: 'numeric', editor: 'customNumeric' };
+                    } else {
+                        return { type: 'text', editor: 'customText' };
+                    }
+                },
+                beforeRenderer: function(TD, row, col, prop, value, cellProperties) {
+                    const data = hot.getData();
+                    const psi = data[row][0]; // PSI (col 0)
+                    const cv1 = parseFloat(data[row][1]); // CV #1 (col 1)
+                    const cv2 = parseFloat(data[row][2]); // CV #2 (col 2)
+                    const rv = data[row][3];  // RV Opening (col 3)
+
+                    // Conditions
+                    const isFilled = psi !== '' && psi !== null && 
+                                    cv1 !== '' && cv1 !== null && !isNaN(cv1) && 
+                                    cv2 !== '' && cv2 !== null && !isNaN(cv2);
+                    const hasAnyValue = (psi !== '' && psi !== null) || 
+                                        (cv1 !== '' && cv1 !== null && !isNaN(cv1)) || 
+                                        (cv2 !== '' && cv2 !== null && !isNaN(cv2)) || 
+                                        (rv !== '' && rv !== null);
+                    const cvBelowThreshold = (cv1 < 1.0 && cv1 !== null && !isNaN(cv1)) || 
+                                            (cv2 < 1.0 && cv2 !== null && !isNaN(cv2));
+                    const isValid = isFilled && cv1 >= 1.0 && cv2 >= 1.0;
+
+                    // Reset background
+                    TD.style.backgroundColor = '#2a2a2a';
+
+                    // Apply highlights
+                    if (isValid) {
+                        TD.style.backgroundColor = 'rgba(0, 255, 0, 0.2)'; // Green
+                    } else if (hasAnyValue || (isFilled && cvBelowThreshold)) {
+                        TD.style.backgroundColor = 'rgba(255, 0, 0, 0.2)'; // Red
+                    }
+
+                    // Debug logging
+                    if (row === 0 && col === 0) {
+                        console.log(`Row ${row}: PSI=${psi}, CV1=${cv1}, CV2=${cv2}, RV=${rv}, isFilled=${isFilled}, hasAnyValue=${hasAnyValue}, cvBelowThreshold=${cvBelowThreshold}, isValid=${isValid}`);
                     }
                 },
                 afterScrollVertically: function() {
@@ -373,53 +390,6 @@
                 }
             });
             console.log('Handsontable initialized');
-
-            // Function to update row highlights
-            function updateRowHighlights() {
-                const data = hot.getData();
-                for (let row = 0; row < data.length; row++) {
-                    const psi = data[row][0]; // PSI (col 0)
-                    const cv1 = data[row][1]; // CV #1 (col 1)
-                    const cv2 = data[row][2]; // CV #2 (col 2)
-                    const rv = data[row][3];  // RV Opening (col 3)
-
-                    // Check if PSI, CV #1, and CV #2 are all filled (RV optional)
-                    const isComplete = psi !== '' && psi !== null && 
-                                      cv1 !== '' && cv1 !== null && 
-                                      cv2 !== '' && cv2 !== null;
-                    
-                    // Check if any of PSI, CV #1, CV #2, or RV is filled
-                    const hasAnyValue = (psi !== '' && psi !== null) || 
-                                        (cv1 !== '' && cv1 !== null) || 
-                                        (cv2 !== '' && cv2 !== null) || 
-                                        (rv !== '' && rv !== null);
-
-                    // Remove existing classes
-                    hot.removeCellMeta(row, 0, 'className');
-                    hot.removeCellMeta(row, 1, 'className');
-                    hot.removeCellMeta(row, 2, 'className');
-                    hot.removeCellMeta(row, 3, 'className');
-                    hot.removeCellMeta(row, 4, 'className');
-
-                    // Apply new class based on conditions
-                    if (isComplete) {
-                        // Green if PSI, CV #1, CV #2 are filled
-                        hot.setCellMeta(row, 0, 'className', 'row-green');
-                        hot.setCellMeta(row, 1, 'className', 'row-green');
-                        hot.setCellMeta(row, 2, 'className', 'row-green');
-                        hot.setCellMeta(row, 3, 'className', 'row-green');
-                        hot.setCellMeta(row, 4, 'className', 'row-green');
-                    } else if (hasAnyValue) {
-                        // Red if any value is present but not complete
-                        hot.setCellMeta(row, 0, 'className', 'row-red');
-                        hot.setCellMeta(row, 1, 'className', 'row-red');
-                        hot.setCellMeta(row, 2, 'className', 'row-red');
-                        hot.setCellMeta(row, 3, 'className', 'row-red');
-                        hot.setCellMeta(row, 4, 'className', 'row-red');
-                    }
-                }
-                hot.render(); // Re-render to apply changes
-            }
 
             // Load data from localStorage
             function loadFromLocalStorage() {
@@ -432,7 +402,6 @@
                     hot.loadData(spreadsheetData);
                     dateInput.value = parsedData.date || '';
                 }
-                updateRowHighlights(); // Apply highlights on load
                 hot.render();
                 console.log('Data loaded, rows:', hot.countRows());
             }
@@ -450,11 +419,8 @@
             // Load initial data
             loadFromLocalStorage();
 
-            // Save and update highlights on every change
-            hot.addHook('afterChange', (changes, source) => {
-                saveToLocalStorage();
-                updateRowHighlights();
-            });
+            // Save on every change
+            hot.addHook('afterChange', saveToLocalStorage);
             dateInput.addEventListener('change', saveToLocalStorage);
 
             // Export to CSV with custom filename
@@ -475,7 +441,7 @@
                 printTable.id = 'printTable';
                 const thead = document.createElement('thead');
                 const tbody = document.createElement('tbody');
-                const headers = ['PSI', 'CV #1', 'CV #2', 'RV Opening', 'Notes'];
+                const headers = ['PSI (PSI)', 'CV #1 (PSID)', 'CV #2 (PSID)', 'RV Opening (PSID)', 'Notes'];
 
                 const headerRow = document.createElement('tr');
                 headers.forEach(header => {
@@ -531,7 +497,6 @@
                 dateInput.value = '';
                 localStorage.setItem('backflowReports', JSON.stringify(emptyData));
                 confirmationPopup.style.display = 'none';
-                updateRowHighlights(); // Reset highlights
                 hot.render();
             });
 
@@ -569,7 +534,6 @@
                 contactPopup.style.display = 'none';
             });
 
-            // Close contact popup when clicking outside
             document.addEventListener('click', (event) => {
                 if (!contactPopup.contains(event.target) && event.target !== contactButton) {
                     contactPopup.style.display = 'none';
