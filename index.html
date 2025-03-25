@@ -197,12 +197,17 @@
             color: #000000 !important;
         }
         .handsontable .htCore .htEditor_active .htEditor_input {
-            color: #ffffff !important;
+            color: #ffffff !important; /* Default white for neutral cells */
             background-color: #2a2a2a !important;
+        }
+        /* Ensure black text when editing highlighted cells */
+        .handsontable td[style*="rgba(255, 0, 0, 0.2)"] .htEditor_active .htEditor_input,
+        .handsontable td[style*="rgba(0, 255, 0, 0.2)"] .htEditor_active .htEditor_input {
+            color: #000000 !important;
         }
         .handsontable td[style*="rgba(255, 0, 0, 0.2)"],
         .handsontable td[style*="rgba(0, 255, 0, 0.2)"] {
-            color: #000000 !important;
+            color: #000000 !important; /* Black for static text in highlighted cells */
         }
         .handsontable .htCore .htCornerHeader {
             background-color: #333333;
@@ -213,7 +218,7 @@
         }
         .handsontable .htCheckboxRendererInput {
             display: block;
-            margin: 0 auto; /* Center the checkbox */
+            margin: 0 auto;
         }
         @media print {
             body {
@@ -365,7 +370,7 @@
                     input.setAttribute('pattern', '[0-9]*');
                     input.setAttribute('type', 'number');
                     input.style.background = '#2a2a2a';
-                    input.style.color = '#ffffff';
+                    input.style.color = '#ffffff'; // Default for neutral cells
                     input.style.border = 'none';
                 }
             }
@@ -378,7 +383,7 @@
                     input.setAttribute('inputmode', 'text');
                     input.setAttribute('type', 'text');
                     input.style.background = '#2a2a2a';
-                    input.style.color = '#ffffff';
+                    input.style.color = '#ffffff'; // Default for neutral cells
                     input.style.border = 'none';
                 }
             }
@@ -392,8 +397,8 @@
                 data: Array(20).fill().map(() => Array(6).fill('')),
                 rowHeaders: true,
                 colHeaders: ['PSI (PSI)', 'CV #1 (PSID)', 'CV #2 (PSID)', 'VB', 'RV/Air Inlet (PSID)', 'Notes'],
-                colWidths: [120, 120, 120, 60, 150, 200], // Reduced VB width to 60px
-                rowHeights: 30, // Reduced from 40 to 30
+                colWidths: [120, 120, 120, 60, 150, 200],
+                rowHeights: 30,
                 minRows: 20,
                 maxRows: 20,
                 minCols: 6,
@@ -402,11 +407,11 @@
                 stretchH: 'all',
                 cornerHeader: getDayEmoji(),
                 cells: function(row, col, prop) {
-                    if (col === 3) { // VB column
+                    if (col === 3) {
                         return { type: 'checkbox' };
-                    } else if (col < 3 || col === 4) { // PSI, CV #1, CV #2, RV/Air Inlet
+                    } else if (col < 3 || col === 4) {
                         return { type: 'numeric', editor: 'customNumeric' };
-                    } else { // Notes
+                    } else {
                         return { type: 'text', editor: 'customText' };
                     }
                 },
@@ -416,7 +421,7 @@
                         const psi = data[row][0] === '' || data[row][0] === null ? NaN : parseFloat(data[row][0]);
                         const cv1 = data[row][1] === '' || data[row][1] === null ? NaN : parseFloat(data[row][1]);
                         const cv2 = data[row][2] === '' || data[row][2] === null ? NaN : parseFloat(data[row][2]);
-                        const vb = data[row][3]; // Checkbox value (true/false)
+                        const vb = data[row][3];
                         const rv = data[row][4] === '' || data[row][4] === null ? NaN : parseFloat(data[row][4]);
 
                         const hasAnyValue = !isNaN(psi) || !isNaN(cv1) || !isNaN(cv2) || !isNaN(rv);
