@@ -17,7 +17,7 @@
         }
         #headerContainer {
             display: flex;
-            justify-content: space-between;
+            justify-content: center; /* Center the logos and title */
             align-items: center;
             padding: 10px 20px;
             background-color: #333333;
@@ -34,7 +34,12 @@
             font-weight: bold;
             color: #ffffff;
             margin: 0;
-            flex-grow: 1;
+            flex-grow: 0; /* No need to grow now that it's centered */
+        }
+        #contactButtonContainer {
+            text-align: center;
+            padding: 10px 0;
+            background-color: #333333;
         }
         #contactButton {
             padding: 10px 20px;
@@ -169,13 +174,13 @@
         /* Highlighted row header (number) */
         .handsontable .ht__active_highlight {
             background-color: #333333; /* Keep background same as other headers */
-            color: #00FF00 !important; /* Lime green for row number */
+            color: #FFD700 !important; /* Gold for row number */
             font-weight: bold !important; /* Bold when selected */
         }
         /* Highlighted column header (e.g., PSI) */
         .handsontable th.ht__highlight {
             background-color: #333333; /* Keep background same as other headers */
-            color: #00FF00 !important; /* Lime green for column header */
+            color: #FFD700 !important; /* Gold for column header */
             font-weight: bold !important; /* Bold when selected */
         }
         @media print {
@@ -194,6 +199,9 @@
             #title {
                 color: black;
                 font-size: 28px;
+            }
+            #contactButtonContainer {
+                display: none; /* Hide Contact button when printing */
             }
             #dateContainer {
                 background-color: white;
@@ -241,6 +249,8 @@
         <img id="logoLeft" src="./logo-left.png" alt="Left Logo">
         <div id="title">Backflow Reports</div>
         <img id="logoRight" src="./logo-right.png" alt="Right Logo">
+    </div>
+    <div id="contactButtonContainer">
         <button id="contactButton">Contact Office</button>
     </div>
     <div id="dateContainer">
